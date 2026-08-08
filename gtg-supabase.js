@@ -9,8 +9,8 @@
 // ═══════════════════════════════════════════════════════════════
 
 // ── CONFIGURATION ──────────────────────────────────────────────
-const NEXT_PUBLIC_SUPABASE_URL=https://jxvveosaqztsadkqdfiz.supabase.co
-const NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=sb_publishable_AwXU7t6yjj5p56Qj-4jZ6A_Y-cznsXq
+const SUPABASE_URL = 'https://jxvveosaqztsadkqdfiz.supabase.co'
+const SUPABASE_KEY = 'sb_publishable_AwXU7t6yjj5p56Qj-4jZ6A_Y-cznsXq'
 
 // ── INIT CLIENT ───────────────────────────────────────────────
 // Supabase est chargé via CDN dans le HTML (voir plus bas)
