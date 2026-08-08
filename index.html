@@ -1746,6 +1746,54 @@ body::after {
     </div>
   </div>
 
+  <!-- Écran gestion de ligue — réservé au créateur (leagues.admin_id) -->
+  <div id="ligue-manage" style="display:none;">
+    <div class="panel panel-gold cut" style="padding:20px;max-width:600px;margin:0 auto;">
+      <div class="panel-label">GÉRER LA LIGUE</div>
+      <div style="font-family:var(--f-disp);font-size:20px;letter-spacing:2px;margin-bottom:4px;" id="lm-nom"></div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:16px;" id="lm-info"></div>
+
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">STATUT DE LA LIGUE</div>
+          <div style="display:flex;gap:8px;">
+            <select id="lm-statut" style="flex:1;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);padding:8px;font-size:13px;">
+              <option value="recrutement">Recrutement</option>
+              <option value="mercato">Mercato</option>
+              <option value="saison">Saison</option>
+              <option value="terminee">Terminée</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="updateLeagueStatut()">METTRE À JOUR</button>
+          </div>
+        </div>
+
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">CALENDRIER DE LA SAISON</div>
+          <button class="btn btn-outline btn-sm" style="width:100%;" onclick="adminGenererCalendrier()">📅 GÉNÉRER LE CALENDRIER (aller-retour, round-robin)</button>
+        </div>
+
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">RÉSOUDRE UN TOUR D'ENCHÈRES</div>
+          <div style="display:flex;gap:8px;">
+            <select id="lm-tour" style="background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);padding:8px;font-size:13px;">
+              <option value="1">Tour 1</option>
+              <option value="2">Tour 2</option>
+              <option value="3">Tour 3</option>
+            </select>
+            <button class="btn btn-outline btn-sm" style="flex:1;" onclick="adminResoudreTour()">⚡ RÉSOUDRE (attribue les joueurs, notifie les coachs)</button>
+          </div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">Ne fonctionne que si tous les coachs ont soumis leurs enchères pour ce tour.</div>
+        </div>
+
+        <div id="lm-result" style="font-size:12px;"></div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <button class="btn btn-outline btn-sm" onclick="showLigueScreen('home')">FERMER</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Écran import MPG -->
   <div id="ligue-mpg" style="display:none;">
     <div class="panel cut" style="padding:20px;max-width:720px;margin:0 auto;">
@@ -2160,17 +2208,18 @@ async function loadMesLigues() {
       const { count } = await sb.from('teams').select('*', {count:'exact'}).eq('league_id', t.league.id)
       const isAdmin = t.league.admin_id === CURRENT_USER.id
       return `
-      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--ink-3);border:1.5px solid var(--gold-b);cursor:pointer;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);" onclick="selectLigue('${t.league.id}','${t.league.code}')">
-        <div style="width:40px;height:40px;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--f-disp);font-size:18px;color:var(--gold-hi);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);">⚽</div>
-        <div style="flex:1;">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--ink-3);border:1.5px solid var(--gold-b);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);">
+        <div style="width:40px;height:40px;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--f-disp);font-size:18px;color:var(--gold-hi);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);cursor:pointer;" onclick="selectLigue('${t.league.id}','${t.league.code}')">⚽</div>
+        <div style="flex:1;cursor:pointer;" onclick="selectLigue('${t.league.id}','${t.league.code}')">
           <div style="font-family:var(--f-disp);font-size:16px;letter-spacing:2px;">${t.league.nom.toUpperCase()}</div>
           <div style="font-size:10px;color:var(--muted);">${count||0}/${t.league.nb_joueurs} équipes · ${isAdmin?'👑 Admin':'Membre'}</div>
         </div>
-        <div style="text-align:right;">
+        <div style="text-align:right;cursor:pointer;" onclick="selectLigue('${t.league.id}','${t.league.code}')">
           <div style="font-family:var(--f-disp);font-size:24px;color:var(--gold-hi);">${t.points||0}</div>
           <div style="font-size:9px;color:var(--muted);">pts</div>
         </div>
         <span style="background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--green);font-family:var(--f-disp);font-size:9px;letter-spacing:1px;padding:2px 8px;">${t.league.statut?.toUpperCase()||'ACTIF'}</span>
+        ${isAdmin ? `<button class="btn btn-outline btn-sm" style="padding:6px 10px;" title="Gérer la ligue" onclick="event.stopPropagation(); openLeagueAdmin('${t.league.id}')">⚙️</button>` : ''}
       </div>`
     })).then(items => items.join(''))
 
@@ -2340,6 +2389,78 @@ async function claimPlannedTeam(plannedId, leagueId) {
   } catch (e) {
     toast('Erreur : ' + e.message, 'error')
   }
+}
+
+// ── GESTION DE LIGUE — réservé au créateur (leagues.admin_id) ──
+let lmCurrentLeagueId = null
+
+async function openLeagueAdmin(leagueId) {
+  if (!sb || !CURRENT_USER) return
+  try {
+    const { data: league, error } = await sb.from('leagues').select('*').eq('id', leagueId).single()
+    if (error || !league) { toast('Ligue introuvable', 'error'); return }
+
+    // Vérification stricte : seul le créateur de CETTE ligue peut accéder à cet écran
+    if (league.admin_id !== CURRENT_USER.id) {
+      toast('⛔ Réservé au créateur de la ligue', 'error')
+      return
+    }
+
+    lmCurrentLeagueId = leagueId
+    document.getElementById('lm-nom').textContent = league.nom.toUpperCase()
+    document.getElementById('lm-info').textContent = `Code ${league.code} · ${league.nb_joueurs} équipes prévues`
+    document.getElementById('lm-statut').value = league.statut || 'recrutement'
+    document.getElementById('lm-result').innerHTML = ''
+    showLigueScreen('manage')
+  } catch (e) {
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+
+// Revérifie côté serveur que l'utilisateur est bien admin_id avant toute action sensible
+async function assertLeagueAdmin(leagueId) {
+  const { data: league } = await sb.from('leagues').select('admin_id').eq('id', leagueId).single()
+  if (!league || league.admin_id !== CURRENT_USER.id) {
+    toast('⛔ Action réservée au créateur de la ligue', 'error')
+    return false
+  }
+  return true
+}
+
+async function updateLeagueStatut() {
+  if (!lmCurrentLeagueId) return
+  if (!(await assertLeagueAdmin(lmCurrentLeagueId))) return
+  const statut = document.getElementById('lm-statut').value
+  const { error } = await sb.from('leagues').update({ statut }).eq('id', lmCurrentLeagueId)
+  const resEl = document.getElementById('lm-result')
+  if (error) { resEl.innerHTML = `<span style="color:var(--red)">Erreur : ${error.message}</span>`; return }
+  resEl.innerHTML = `<span style="color:var(--green)">✅ Statut mis à jour : ${statut}</span>`
+  toast('Statut de la ligue mis à jour', 'success')
+  await loadMesLigues()
+}
+
+async function adminGenererCalendrier() {
+  if (!lmCurrentLeagueId) return
+  if (!(await assertLeagueAdmin(lmCurrentLeagueId))) return
+  const resEl = document.getElementById('lm-result')
+  resEl.innerHTML = `<span style="color:var(--muted)">⏳ Génération du calendrier…</span>`
+  const { data, error } = await sb.rpc('generer_calendrier', { p_league_id: lmCurrentLeagueId })
+  if (error) { resEl.innerHTML = `<span style="color:var(--red)">Erreur : ${error.message}</span>`; return }
+  resEl.innerHTML = `<span style="color:var(--green)">✅ Calendrier généré : ${data} matchs créés</span>`
+  toast('Calendrier généré', 'success')
+}
+
+async function adminResoudreTour() {
+  if (!lmCurrentLeagueId) return
+  if (!(await assertLeagueAdmin(lmCurrentLeagueId))) return
+  const tour = parseInt(document.getElementById('lm-tour').value, 10)
+  const resEl = document.getElementById('lm-result')
+  resEl.innerHTML = `<span style="color:var(--muted)">⏳ Résolution du tour ${tour}…</span>`
+  const { data, error } = await sb.rpc('resoudre_tour', { p_league_id: lmCurrentLeagueId, p_tour: tour })
+  if (error) { resEl.innerHTML = `<span style="color:var(--red)">Erreur : ${error.message}</span>`; return }
+  if (data?.error) { resEl.innerHTML = `<span style="color:var(--red)">${data.error}</span>`; return }
+  resEl.innerHTML = `<span style="color:var(--green)">✅ Tour ${tour} résolu · ${data?.results?.length || 0} joueur(s) attribué(s)</span>`
+  toast('Tour résolu', 'success')
 }
 
 // ── CRÉATION LIGUE AMÉLIORÉE (plusieurs ligues) ───────
@@ -3423,7 +3544,7 @@ function endSim() {
 // MODULE : LIGUE
 // ══════════════════════════════════════════
 function showLigueScreen(id) {
-  ['home','create','join','mpg','claim'].forEach(s=>{
+  ['home','create','join','mpg','claim','manage'].forEach(s=>{
     const el=document.getElementById('ligue-'+s);
     if(el) el.style.display = s===id ? 'block':'none';
   });
