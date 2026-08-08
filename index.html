@@ -1063,8 +1063,8 @@ body::after {
     <div class="nav-item active" onclick="goto('dashboard',this)" title="Accueil">
       <div class="nav-icon">🏠</div><div class="nav-label">HOME</div>
     </div>
-    <div class="nav-item" onclick="goto('equipe',this)" title="Mon Équipe">
-      <div class="nav-icon">👕</div><div class="nav-label">SQUAD</div>
+    <div class="nav-item" onclick="goto('equipe',this)" title="Effectif">
+      <div class="nav-icon">👕</div><div class="nav-label">EFFECTIF</div>
     </div>
     <div class="nav-item" onclick="goto('mercato',this)" title="Mercato">
       <div class="nav-icon">⚡</div><div class="nav-label">BID</div>
@@ -1136,113 +1136,21 @@ body::after {
   <div class="panel cut" style="padding:16px;margin-bottom:16px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
       <div class="panel-label" style="margin:0;">MES LIGUES</div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-outline btn-sm" onclick="goto('ligue', document.querySelector('.nav-item[title=Ligue]')); showLigueScreen('join')" title="Rejoindre une ligue">🔗 REJOINDRE</button>
-        <button class="btn btn-gold btn-sm" onclick="goto('ligue', document.querySelector('.nav-item[title=Ligue]')); showLigueScreen('create')" title="Créer une ligue">+ CRÉER</button>
-      </div>
+      <button class="btn btn-gold btn-sm" onclick="goto('ligue', document.querySelector('.nav-item[title=Ligue]')); showLigueScreen('create')" title="Créer une ligue">+ CRÉER</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px;" id="dash-ligue-list">
       <div style="color:var(--muted);font-size:12px;padding:14px;text-align:center;">Chargement…</div>
     </div>
   </div>
 
-  <div class="hero-panel" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
-    <div>
-      <div style="font-family:var(--f-disp);font-size:11px;letter-spacing:4px;color:var(--muted);margin-bottom:6px;">SAISON 2025/26 · LIGUE 1</div>
-      <div class="hero-title" id="dash-team-name">LES <em>INVINCIBLES</em> FC</div>
-      <div class="hero-sub" id="dash-team-sub">Coach Romain · Formation 4-3-3 · Liga des Potes</div>
-      <div class="hero-badges">
-        <span class="hero-badge hb-green">● J31 TERMINÉE</span>
-        <span class="hero-badge hb-gold">J32 DANS 3J</span>
-        <span class="hero-badge hb-red">TOUR 2/3 BID</span>
-      </div>
-    </div>
-    <div class="hero-kpis">
-      <div class="hkpi"><div class="hkpi-val" id="dash-score">3–1</div><div class="hkpi-lbl">Score J31</div></div>
-      <div class="hkpi"><div class="hkpi-val" id="dash-rank" style="color:var(--cyan);">1<sup style="font-size:26px">er</sup></div><div class="hkpi-lbl">Classement</div></div>
-      <div class="hkpi"><div class="hkpi-val" id="dash-budget">278</div><div class="hkpi-lbl">Budget M€</div></div>
+  <div class="panel cut" style="padding:16px;">
+    <div class="panel-label">REJOINDRE UNE LIGUE AVEC UN CODE</div>
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <input id="home-join-code" style="flex:1;background:var(--ink-3);border:2px solid var(--border-2);color:var(--gold-hi);font-family:var(--f-mono);font-size:18px;letter-spacing:3px;text-align:center;padding:10px;outline:none;text-transform:uppercase;" placeholder="GTG-XXXXX" maxlength="9" onkeydown="if(event.key==='Enter') quickJoinFromHome()">
+      <button class="btn btn-gold btn-sm" onclick="quickJoinFromHome()">🔗 REJOINDRE</button>
     </div>
   </div>
 
-  <div class="g4" style="margin-bottom:16px;">
-    <div class="kpi-block"><div class="kpi-val">3–1</div><div class="kpi-label">Confrontation J31</div><div class="kpi-delta delta-up">▲ 2 BUTS RÉELS + 1 GTG</div></div>
-    <div class="kpi-block"><div class="kpi-val">278M€</div><div class="kpi-label">Budget disponible</div><div class="kpi-delta delta-up">▲ +5.2M€ REVENTES</div></div>
-    <div class="kpi-block"><div class="kpi-val">2/3</div><div class="kpi-label">Tour d'enchères</div><div class="kpi-delta delta-eq">FERME DANS 62H</div></div>
-    <div class="kpi-block"><div class="kpi-val">7.4</div><div class="kpi-label">Note moy. équipe</div><div class="kpi-delta delta-up">▲ +0.3 VS J30</div></div>
-  </div>
-
-  <div class="g2">
-    <div class="panel panel-gold cut" style="padding:18px;">
-      <div class="panel-label">CONFRONTATION J31</div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-        <div style="font-family:var(--f-disp);font-size:16px;letter-spacing:2px;color:var(--gold-hi);">LES INVINCIBLES</div>
-        <div style="font-family:var(--f-disp);font-size:52px;letter-spacing:6px;line-height:1;"><span style="color:var(--gold-hi);">3</span><span style="color:var(--muted);font-size:40px;"> – </span><span>1</span></div>
-        <div style="font-family:var(--f-disp);font-size:16px;letter-spacing:2px;">DRAGON FC</div>
-      </div>
-      <div class="g2" style="gap:8px;">
-        <div style="background:var(--ink-3);border:1.5px solid var(--border);padding:8px;text-align:center;">
-          <div style="font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:2px;">⚽ RÉELS</div>
-          <div style="font-family:var(--f-disp);font-size:22px;color:#22dd50;">2 – 0</div>
-        </div>
-        <div style="background:var(--ink-3);border:1.5px solid var(--border);padding:8px;text-align:center;">
-          <div style="font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:2px;">⚡ GTG</div>
-          <div style="font-family:var(--f-disp);font-size:22px;color:#cc88ff;">1 – 1</div>
-        </div>
-      </div>
-      <div style="margin-top:10px;font-size:11px;color:var(--muted);letter-spacing:1px;">🛡️ CATENACCIO · 1 BUT ADVERSE ANNULÉ</div>
-    </div>
-
-    <div class="panel cut" style="padding:18px;">
-      <div class="panel-label">TOP PERFORMEURS J31</div>
-
-      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
-        <span style="font-family:var(--f-disp);font-size:18px;color:var(--gold-hi);width:24px;">1</span>
-        <span class="pos pos-ATT">ATT</span>
-        <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:14px;letter-spacing:1px;">Kvaratskhelia</div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;">PSG · 2⚽ 1🎯</div></div>
-        <span style="font-family:var(--f-mono);font-size:18px;font-weight:500;color:#22dd50;">9.2</span>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
-        <span style="font-family:var(--f-disp);font-size:18px;color:var(--muted);width:24px;">2</span>
-        <span class="pos pos-MID">MID</span>
-        <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:14px;letter-spacing:1px;">João Neves</div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;">PSG · 1⚽ 2🎯</div></div>
-        <span style="font-family:var(--f-mono);font-size:18px;font-weight:500;color:#22dd50;">8.5</span>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
-        <span style="font-family:var(--f-disp);font-size:18px;color:var(--muted);width:24px;">3</span>
-        <span class="pos pos-DEF">DEF</span>
-        <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:14px;letter-spacing:1px;">A. Hakimi</div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;">PSG · 0 TIR CONCÉDÉ</div></div>
-        <span style="font-family:var(--f-mono);font-size:18px;font-weight:500;color:var(--gold-hi);">7.5</span>
-      </div>
-
-      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
-        <span style="font-family:var(--f-disp);font-size:18px;color:var(--muted);width:24px;">4</span>
-        <span class="pos pos-GK">GK</span>
-        <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:14px;letter-spacing:1px;">L. Chevalier</div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;">PSG · 3 ARRÊTS CS</div></div>
-        <span style="font-family:var(--f-mono);font-size:18px;font-weight:500;color:var(--gold-hi);">7.2</span>
-      </div>
-
-    </div>
-  </div>
-
-  <div style="margin-top:14px;" class="panel cut">
-    <div class="panel-label">AVANCEMENT SAISON 2025/26</div>
-    <div class="g3" style="padding:18px 0 0;">
-      <div>
-        <div style="display:flex;justify-content:space-between;font-family:var(--f-disp);font-size:11px;letter-spacing:2px;margin-bottom:6px;"><span style="color:var(--muted);">PHASE ALLER</span><span style="color:var(--gold);">100%</span></div>
-        <div class="prog"><div class="prog-f" style="width:100%"></div></div>
-      </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;font-family:var(--f-disp);font-size:11px;letter-spacing:2px;margin-bottom:6px;"><span style="color:var(--muted);">PHASE RETOUR</span><span style="color:var(--gold);">63%</span></div>
-        <div class="prog"><div class="prog-f" style="width:63%"></div></div>
-      </div>
-      <div>
-        <div style="display:flex;justify-content:space-between;font-family:var(--f-disp);font-size:11px;letter-spacing:2px;margin-bottom:6px;"><span style="color:var(--muted);">OBJECTIF PODIUM</span><span style="color:var(--gold);">71%</span></div>
-        <div class="prog"><div class="prog-f" style="width:71%"></div></div>
-      </div>
-    </div>
-  </div>
 </div>
 
 <!-- ══════════════════════════════════
@@ -1475,7 +1383,7 @@ body::after {
     <div class="panel panel-gold cut" style="padding:16px;">
       <div class="panel-label">RÈGLES ENCHÈRES CACHÉES</div>
       <div style="font-size:12px;color:var(--text);line-height:2.2;">
-        • Budget initial : <strong style="color:var(--gold-hi)">350M€</strong> · <strong>3 tours</strong><br>
+        • Budget initial : <strong style="color:var(--gold-hi)">500M€</strong> · <strong>3 tours</strong><br>
         • Enchères <strong>invisibles</strong> aux adversaires<br>
         • Égalité → <strong>1er enchérisseur</strong> gagne<br>
         • Salaire = <strong>20%</strong> du prix d'achat
@@ -1667,13 +1575,13 @@ body::after {
       </div>
       <div class="panel cut" style="padding:16px;">
         <div class="panel-label">CODE D'INVITATION</div>
-        <div style="background:var(--ink-3);border:1.5px solid var(--gold-b);padding:16px;text-align:center;cursor:pointer;margin-bottom:10px;" onclick="copyCode('GTG-4X8K2')">
-          <div style="font-family:var(--f-mono);font-size:36px;letter-spacing:8px;color:var(--gold-hi);">GTG-4X8K2</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:4px;">Cliquer pour copier</div>
+        <div style="background:var(--ink-3);border:1.5px solid var(--gold-b);padding:16px;text-align:center;cursor:pointer;margin-bottom:10px;" id="invite-code-box" onclick="copyCode('')">
+          <div style="font-family:var(--f-mono);font-size:36px;letter-spacing:8px;color:var(--gold-hi);" id="invite-code-value">—</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">Cliquer pour copier le lien</div>
         </div>
         <div style="display:flex;gap:8px;">
-          <button class="btn btn-outline btn-sm" style="flex:1" onclick="shareWhatsApp('GTG-4X8K2')">📱 WHATSAPP</button>
-          <button class="btn btn-outline btn-sm" style="flex:1" onclick="copyCode('GTG-4X8K2')">🔗 COPIER</button>
+          <button class="btn btn-outline btn-sm" style="flex:1" id="invite-whatsapp-btn" onclick="shareWhatsApp('')">📱 WHATSAPP</button>
+          <button class="btn btn-outline btn-sm" style="flex:1" id="invite-copy-btn" onclick="copyCode('')">🔗 COPIER</button>
         </div>
       </div>
     </div>
@@ -2139,9 +2047,14 @@ async function loadDashboard() {
       if (nameEl) nameEl.innerHTML = `<em>${pseudo.toUpperCase()}</em>`
       if (subEl)  subEl.textContent = `Bienvenue ! Crée ou rejoins une ligue pour commencer.`
       if (budgetDisplay) budgetDisplay.textContent = '500M€'
+      HAS_TEAM = false
+      updateNavAccess()
       await loadMesLigues()
       return
     }
+
+    HAS_TEAM = true
+    updateNavAccess()
 
     // Prendre la première équipe active
     const team = teams[0]
@@ -2251,21 +2164,27 @@ async function loadMesLigues() {
 
     targets.forEach(el => el.innerHTML = html)
 
-    // Afficher le code de la première ligue
-    if (teams[0]) {
-      const codeEl = document.querySelector('[onclick*="GTG-"]')
-      if (codeEl) {
-        codeEl.innerHTML = `
-          <div style="font-family:var(--f-mono);font-size:36px;letter-spacing:8px;color:var(--gold-hi);">${teams[0].league.code}</div>
-          <div style="font-size:10px;color:var(--muted);margin-top:4px;">Cliquer pour copier le lien</div>`
-        codeEl.onclick = () => copyCode(teams[0].league.code)
-      }
-      // Bouton WhatsApp
-      const waBtn = document.querySelector('[onclick*="shareWhatsApp"]')
-      if (waBtn) waBtn.onclick = () => shareWhatsApp(teams[0].league.code)
+    // Afficher le code d'invitation — priorité à une ligue dont le coach est ADMIN,
+    // sinon la première ligue disponible
+    const adminTeam = teams.find(t => t.league.admin_id === CURRENT_USER.id) || teams[0]
+    if (adminTeam) {
+      updateInviteCodeDisplay(adminTeam.league.code)
     }
 
   } catch(e) { console.warn('Ligues error:', e.message) }
+}
+
+// Met à jour le panneau "CODE D'INVITATION" via des IDs stables (fiable, pas de recherche par texte)
+function updateInviteCodeDisplay(code) {
+  if (!code) return
+  const valueEl = document.getElementById('invite-code-value')
+  const boxEl   = document.getElementById('invite-code-box')
+  const waBtn   = document.getElementById('invite-whatsapp-btn')
+  const copyBtn = document.getElementById('invite-copy-btn')
+  if (valueEl) valueEl.textContent = code
+  if (boxEl)   boxEl.onclick = () => copyCode(code)
+  if (waBtn)   waBtn.onclick = () => shareWhatsApp(code)
+  if (copyBtn) copyBtn.onclick = () => copyCode(code)
 }
 
 function selectLigue(leagueId, code) {
@@ -2344,7 +2263,7 @@ function renderMpgBudgetRows() {
   let rows = ''
   for (let i = 0; i < nb; i++) {
     const nom = prev[i]?.nom || `Équipe ${i + 1}`
-    const budget = prev[i]?.budget || 350
+    const budget = prev[i]?.budget || 500
     rows += `<div data-mpg-row style="display:flex;gap:6px;align-items:center;">
       <input class="mpg-team-nom" value="${nom}" style="flex:1;background:var(--ink-3);border:1px solid var(--border-2);color:var(--text);font-size:12px;padding:6px 8px;outline:none;" placeholder="Nom équipe MPG">
       <input class="mpg-team-budget" type="number" step="1" value="${budget}" style="width:90px;background:var(--ink-3);border:1px solid var(--border-2);color:var(--gold-hi);font-family:var(--f-mono);text-align:center;padding:6px;outline:none;" placeholder="M€">
@@ -2732,6 +2651,9 @@ function resetUserScopedCaches() {
 
   simLoaded = false; simLoading = false; simErrorMsg = null
   simIsDemo = true; simHomeName = 'LES INVINCIBLES'; simAwayName = 'DRAGON FC'; simJournee = null
+
+  HAS_TEAM = false
+  updateNavAccess()
 }
 
 // Vérifier si l'URL contient ?join=CODE
@@ -2978,7 +2900,17 @@ const PAGE_NAMES = {
   match:'SIMULATEUR GTG', classement:'CLASSEMENT', joueurs:'BASE TRANSFERMARKT',
   ligue:'SYSTÈME LIGUE', ai:'IA COACH'
 };
+// Pages accessibles uniquement une fois qu'un coach a créé/rejoint sa première équipe
+const GATED_PAGES = ['equipe', 'mercato', 'match', 'classement', 'joueurs', 'ai']
+let HAS_TEAM = false
+
 function goto(id, el) {
+  if (GATED_PAGES.includes(id) && !HAS_TEAM) {
+    toast('⛔ Crée ou rejoins d\'abord une ligue et configure ton équipe', 'error')
+    const navHome = document.querySelector('.nav-item[title=Accueil]')
+    goto('dashboard', navHome)
+    return
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id)?.classList.add('active');
@@ -2988,6 +2920,31 @@ function goto(id, el) {
   if (id === 'mercato') { loadEncherePlayers().then(() => renderEnchere()); }
   if (id === 'match') { if (!simLoaded && !simLoading) { loadSimMatch(); } else { renderSimHeader(); } }
   if (id === 'ai') initAIChat();
+}
+
+// Grise visuellement les onglets verrouillés dans le menu latéral
+function updateNavAccess() {
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const onclickAttr = n.getAttribute('onclick') || ''
+    const match = GATED_PAGES.find(p => onclickAttr.includes(`goto('${p}'`))
+    if (match) {
+      n.style.opacity = HAS_TEAM ? '1' : '0.35'
+      n.style.cursor = HAS_TEAM ? '' : 'not-allowed'
+    }
+  })
+}
+
+// Recherche rapide de ligue par code, directement depuis la page d'accueil
+function quickJoinFromHome() {
+  const code = document.getElementById('home-join-code')?.value?.trim().toUpperCase()
+  if (!code || code.length < 5) { toast('Entre un code valide (ex: GTG-XXXXX)', 'error'); return }
+  if (!CURRENT_USER) { openAuthModal(); return }
+  const navLigue = document.querySelector('.nav-item[title=Ligue]')
+  goto('ligue', navLigue)
+  showLigueScreen('join')
+  const input = document.getElementById('join-code-input')
+  if (input) input.value = code
+  lookupLigue()
 }
 
 // ── TABS ──
@@ -3005,6 +2962,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.modal-bg').forEach(m =>
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
   );
+  updateNavAccess()
   // Init Supabase
   initSupabaseClient();
 });
@@ -3186,7 +3144,7 @@ async function loadEncherePlayers() {
     const team = teams[0]
     encTeamId   = team.id
     encLeagueId = team.league_id
-    encBudget   = Number.isFinite(team.budget) ? Math.round(team.budget / 1e9) : 350
+    encBudget   = Number.isFinite(team.budget) ? Math.round(team.budget / 1e9) : 500
 
     // Charger les enchères existantes de ce tour
     const { data: bids } = await sb.from('bids')
@@ -3354,7 +3312,7 @@ function updateEncBudget() {
   if (el1) el1.textContent = rem.toFixed(1) + 'M€'
   if (el2) el2.textContent = encEngaged.toFixed(1) + 'M€'
   if (el3) el3.textContent = encEngaged.toFixed(1) + 'M€'
-  if (bar) bar.style.width = Math.max(0, (rem / 350 * 100)) + '%'
+  if (bar) bar.style.width = Math.max(0, (rem / 500 * 100)) + '%'
 }
 
 async function submitBids() {
@@ -3635,14 +3593,7 @@ function selectNb(n, el) {
 }
 
 function showInviteCode(code) {
-  const link = getInviteLink(code)
-  const codeEl = document.querySelector('[onclick*="GTG-4X8K2"]')
-  if (codeEl) {
-    codeEl.innerHTML = `
-      <div style="font-family:var(--f-mono);font-size:36px;letter-spacing:8px;color:var(--gold-hi);">${code}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:4px;">Cliquer pour copier le lien</div>`
-    codeEl.onclick = () => copyCode(code)
-  }
+  updateInviteCodeDisplay(code)
 }
 
 // ══════════════════════════════════════════
@@ -3881,7 +3832,7 @@ async function confirmMpgImport() {
 // MODULE : IA COACH
 // ══════════════════════════════════════════
 const AI_CONTEXT = `Tu es l'IA Coach GTG (Gold to Goat), fantasy football Ligue 1.
-Règles : Budget 350M€, 3 tours enchères cachées, duels GTG MID→DEF→GK, catenaccio DEF×4, GOAT=2.5.
+Règles : Budget 500M€, 3 tours enchères cachées, duels GTG MID→DEF→GK, catenaccio DEF×4, GOAT=2.5.
 Équipe du coach : Les Invincibles FC, 4-3-3 PSG, budget 278M€, 1er au classement.
 Réponds en français, concis, expert, conseils actionnables.`;
 let aiHistory = [];
