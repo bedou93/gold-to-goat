@@ -1066,7 +1066,7 @@ body::after {
     <div class="nav-item" onclick="goto('equipe',this)" title="Effectif">
       <div class="nav-icon">👕</div><div class="nav-label">EFFECTIF</div>
     </div>
-    <div class="nav-item" onclick="goto('mercato',this)" title="Mercato">
+    <div class="nav-item" onclick="goto('mercato',this)" title="Mercato" style="display:none">
       <div class="nav-icon">⚡</div><div class="nav-label">BID</div>
       <div class="nav-badge"></div>
     </div>
@@ -1078,6 +1078,9 @@ body::after {
     </div>
     <div class="nav-item" onclick="goto('joueurs',this)" title="Joueurs TM">
       <div class="nav-icon">📊</div><div class="nav-label">DB</div>
+    </div>
+    <div class="nav-item" onclick="goto('finances',this)" title="Finances">
+      <div class="nav-icon">💰</div><div class="nav-label">FINANCES</div>
     </div>
     <div class="nav-item" onclick="goto('ligue',this)" title="Ligue">
       <div class="nav-icon">🔗</div><div class="nav-label">LEAGUE</div>
@@ -1116,6 +1119,8 @@ body::after {
       <span class="topbar-title-sub">FANTASY LIGUE 1</span>
     </div>
 
+    <div class="topbar-divider"></div>
+    <div style="font-family:var(--f-disp);font-size:14px;letter-spacing:2px;color:var(--gold-hi);font-weight:700;" id="topbar-league-name"></div>
     <div class="topbar-divider"></div>
     <div style="font-family:var(--f-disp);font-size:11px;letter-spacing:2px;color:var(--muted);" id="topbar-page">DASHBOARD</div>
 
@@ -1405,27 +1410,85 @@ body::after {
     </div>
   </div>
 
-  <!-- Joueurs disponibles -->
-  <div class="panel cut" style="padding:16px;">
-    <div class="panel-label">JOUEURS DISPONIBLES · ENCHÈRES CACHÉES</div>
-    <!-- Filtres -->
-    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
-      <input id="enc-search" style="flex:1;min-width:160px;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:13px;padding:7px 10px;outline:none;" placeholder="🔍 Rechercher..." oninput="renderEnchere()">
-      <select id="enc-pos" style="background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;letter-spacing:1px;padding:7px 10px;outline:none;cursor:pointer;" onchange="renderEnchere()">
-        <option value="ALL">TOUS</option>
-        <option value="GK">GK</option>
-        <option value="DEF">DEF</option>
-        <option value="MID">MID</option>
-        <option value="ATT">ATT</option>
-      </select>
+  <!-- Joueurs disponibles + Résultats du mercato -->
+  <div class="g2">
+    <div class="panel cut" style="padding:16px;">
+      <div class="panel-label">JOUEURS DISPONIBLES · ENCHÈRES CACHÉES</div>
+      <!-- Filtres -->
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+        <input id="enc-search" style="flex:1;min-width:160px;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:13px;padding:7px 10px;outline:none;" placeholder="🔍 Rechercher..." oninput="renderEnchere()">
+        <select id="enc-pos" style="background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;letter-spacing:1px;padding:7px 10px;outline:none;cursor:pointer;" onchange="renderEnchere()">
+          <option value="ALL">TOUS</option>
+          <option value="GK">GK</option>
+          <option value="DEF">DEF</option>
+          <option value="MID">MID</option>
+          <option value="ATT">ATT</option>
+        </select>
+      </div>
+      <div id="enc-list"></div>
     </div>
-    <div id="enc-list"></div>
+
+    <div class="panel cut" style="padding:16px;">
+      <div class="panel-label">RÉSULTATS DU MERCATO</div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:10px;">Joueurs déjà attribués dans cette ligue · équipe · prix payé</div>
+      <div id="enc-results-list" style="display:flex;flex-direction:column;gap:6px;max-height:640px;overflow-y:auto;"></div>
+    </div>
   </div>
 
   <!-- Panier -->
   <div class="panel cut" style="padding:16px;margin-top:14px;" id="enc-panier-panel" style="display:none">
     <div class="panel-label">MON PANIER</div>
     <div id="enc-panier-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     FINANCES
+══════════════════════════════════ -->
+<div id="page-finances" class="page">
+  <div class="chapter">
+    <div><div class="chapter-num">SECTION 08</div></div>
+    <div class="chapter-title">SUIVI <em>FINANCES</em></div>
+    <div class="chapter-line"></div>
+  </div>
+
+  <!-- Résumé -->
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px;" class="g3">
+    <div class="panel cut" style="padding:16px;text-align:center;">
+      <div style="font-family:var(--f-disp);font-size:28px;color:var(--gold-hi);" id="fin-initial">—</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:4px;">BUDGET DE DÉPART (ESTIMÉ)</div>
+    </div>
+    <div class="panel cut" style="padding:16px;text-align:center;">
+      <div style="font-family:var(--f-disp);font-size:28px;color:var(--red);" id="fin-depense">—</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:4px;">DÉPENSÉ AU MERCATO</div>
+    </div>
+    <div class="panel cut" style="padding:16px;text-align:center;">
+      <div style="font-family:var(--f-disp);font-size:28px;color:var(--green);" id="fin-restant">—</div>
+      <div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-top:4px;">BUDGET RESTANT</div>
+    </div>
+  </div>
+
+  <!-- Détail par joueur -->
+  <div class="panel cut" style="padding:16px;margin-bottom:16px;">
+    <div class="panel-label">DÉTAIL DES ACHATS</div>
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="padding:8px 10px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--gold);">JOUEUR</th>
+          <th style="padding:8px 10px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--gold);">POSTE</th>
+          <th style="padding:8px 10px;text-align:right;font-family:var(--f-disp);font-size:10px;letter-spacing:1px;color:var(--muted);border-bottom:2px solid var(--gold);">PRIX D'ACHAT</th>
+        </tr>
+      </thead>
+      <tbody id="fin-tbody"></tbody>
+    </table>
+  </div>
+
+  <!-- À venir -->
+  <div class="panel cut" style="padding:16px;border-style:dashed;opacity:0.7;">
+    <div class="panel-label">🚧 À VENIR</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+      Salaires des joueurs (impact récurrent sur le budget) et revenus générés par les résultats de match seront ajoutés ici dans une prochaine version.
+    </div>
   </div>
 </div>
 
@@ -1660,6 +1723,10 @@ body::after {
       <div class="panel-label">CONFIGURE TON ÉQUIPE</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:16px;" id="setup-league-label"></div>
       <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">BUDGET DE DÉPART</div>
+          <div style="background:var(--ink-3);border:1.5px solid var(--gold-b);padding:12px;font-family:var(--f-mono);font-size:22px;color:var(--gold-hi);text-align:center;letter-spacing:2px;" id="setup-budget-display">500M€</div>
+        </div>
         <div>
           <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">NOM DE L'ÉQUIPE</div>
           <input id="setup-team-nom" style="width:100%;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);padding:10px;font-size:14px;outline:none;" placeholder="Ex : Les Invincibles FC">
@@ -2190,12 +2257,33 @@ function updateInviteCodeDisplay(code) {
 // Contexte de la ligue/équipe actuellement sélectionnée depuis "MES LIGUES"
 let CURRENT_TEAM_ID   = null
 let CURRENT_LEAGUE_ID = null
+let CURRENT_LEAGUE_STATUT = null
 
-function selectLigue(teamId, leagueId, code, statut) {
+// Centralise le stockage du contexte + l'affichage bien visible du nom de ligue en en-tête
+function setCurrentLeagueContext(teamId, leagueId, leagueName, statut) {
   CURRENT_TEAM_ID   = teamId
   CURRENT_LEAGUE_ID = leagueId
-  localStorage.setItem('gtg-current-team', teamId)
-  localStorage.setItem('gtg-current-league', leagueId)
+  localStorage.setItem('gtg-current-team', teamId || '')
+  localStorage.setItem('gtg-current-league', leagueId || '')
+  localStorage.setItem('gtg-current-league-name', leagueName || '')
+  const nameEl = document.getElementById('topbar-league-name')
+  if (nameEl) nameEl.textContent = leagueName ? leagueName.toUpperCase() : ''
+  if (statut !== undefined) updateMercatoNavVisibility(statut)
+}
+
+// Le mercato n'apparaît dans le menu QUE si la ligue sélectionnée est en phase "mercato"
+function updateMercatoNavVisibility(statut) {
+  CURRENT_LEAGUE_STATUT = statut
+  const navMercato = document.querySelector('.nav-item[title=Mercato]')
+  if (navMercato) navMercato.style.display = (statut === 'mercato') ? '' : 'none'
+}
+
+function selectLigue(teamId, leagueId, code, statut) {
+  setCurrentLeagueContext(teamId, leagueId, null, statut) // le nom sera mis à jour juste après via loadMesLigues
+  // Récupérer le nom exact de la ligue pour l'en-tête
+  sb.from('leagues').select('nom').eq('id', leagueId).single().then(({ data }) => {
+    if (data?.nom) setCurrentLeagueContext(teamId, leagueId, data.nom, statut)
+  })
 
   if (statut === 'mercato') {
     // Mercato en cours → on emmène directement le coach enchérir
@@ -2353,6 +2441,8 @@ function openTeamSetup(opts) {
   document.getElementById('setup-team-nom').value  = opts.defaultNom || ''
   document.getElementById('setup-stade-nom').value = ''
   document.getElementById('setup-coach-nom').value = CURRENT_PROFILE?.pseudo || ''
+  const budgetM = Math.round((opts.budget ?? 500000000000) / 1e9)
+  document.getElementById('setup-budget-display').textContent = budgetM + 'M€'
   showLigueScreen('setup')
 }
 
@@ -2408,6 +2498,11 @@ async function confirmTeamSetup() {
     toast(`🎉 Équipe "${nom}" prête !${code ? ' Code ligue : ' + code : ''}`, 'success')
     pendingTeamSetup = null
     if (code) showInviteCode(code)
+
+    // Récupérer le nom + statut de la ligue pour l'afficher en en-tête et gérer l'accès au mercato
+    const { data: leagueRow } = await sb.from('leagues').select('nom, statut').eq('id', leagueId).single()
+    setCurrentLeagueContext(team.id, leagueId, leagueRow?.nom, leagueRow?.statut)
+
     showLigueScreen('home')
     await loadMesLigues()
     await loadDashboard()
@@ -2461,6 +2556,8 @@ async function updateLeagueStatut() {
   if (error) { resEl.innerHTML = `<span style="color:var(--red)">Erreur : ${error.message}</span>`; return }
   resEl.innerHTML = `<span style="color:var(--green)">✅ Statut mis à jour : ${statut}</span>`
   toast('Statut de la ligue mis à jour', 'success')
+  // Si c'est la ligue actuellement affichée, mettre à jour l'accès au mercato immédiatement
+  if (lmCurrentLeagueId === CURRENT_LEAGUE_ID) updateMercatoNavVisibility(statut)
   await loadMesLigues()
 }
 
@@ -2486,6 +2583,15 @@ async function adminResoudreTour() {
   if (data?.error) { resEl.innerHTML = `<span style="color:var(--red)">${data.error}</span>`; return }
   resEl.innerHTML = `<span style="color:var(--green)">✅ Tour ${tour} résolu · ${data?.results?.length || 0} joueur(s) attribué(s)</span>`
   toast('Tour résolu', 'success')
+
+  // La résolution peut changer automatiquement le statut de la ligue (tour suivant ou passage en saison)
+  const { data: freshLeague } = await sb.from('leagues').select('statut').eq('id', lmCurrentLeagueId).single()
+  if (freshLeague) {
+    const statutSelect = document.getElementById('lm-statut')
+    if (statutSelect) statutSelect.value = freshLeague.statut
+    if (lmCurrentLeagueId === CURRENT_LEAGUE_ID) updateMercatoNavVisibility(freshLeague.statut)
+  }
+  await loadMesLigues()
 }
 
 // ── CRÉATION LIGUE AMÉLIORÉE (plusieurs ligues) ───────
@@ -2670,6 +2776,9 @@ function resetUserScopedCaches() {
   HAS_TEAM = false
   CURRENT_TEAM_ID = null
   CURRENT_LEAGUE_ID = null
+  updateMercatoNavVisibility(null)
+  const nameEl = document.getElementById('topbar-league-name')
+  if (nameEl) nameEl.textContent = ''
   updateNavAccess()
 }
 
@@ -2918,12 +3027,18 @@ const PAGE_NAMES = {
   ligue:'SYSTÈME LIGUE', ai:'IA COACH'
 };
 // Pages accessibles uniquement une fois qu'un coach a créé/rejoint sa première équipe
-const GATED_PAGES = ['equipe', 'mercato', 'match', 'classement', 'joueurs', 'ai']
+const GATED_PAGES = ['equipe', 'mercato', 'match', 'classement', 'joueurs', 'ai', 'finances']
 let HAS_TEAM = false
 
 function goto(id, el) {
   if (GATED_PAGES.includes(id) && !HAS_TEAM) {
     toast('⛔ Crée ou rejoins d\'abord une ligue et configure ton équipe', 'error')
+    const navHome = document.querySelector('.nav-item[title=Accueil]')
+    goto('dashboard', navHome)
+    return
+  }
+  if (id === 'mercato' && CURRENT_LEAGUE_STATUT !== 'mercato') {
+    toast('⛔ Le mercato n\'est pas ouvert pour cette ligue actuellement', 'error')
     const navHome = document.querySelector('.nav-item[title=Accueil]')
     goto('dashboard', navHome)
     return
@@ -2938,7 +3053,52 @@ function goto(id, el) {
   if (id === 'match') { if (!simLoaded && !simLoading) { loadSimMatch(); } else { renderSimHeader(); } }
   if (id === 'equipe' && CURRENT_TEAM_ID) { loadMonEffectif(CURRENT_TEAM_ID); }
   if (id === 'classement' && CURRENT_LEAGUE_ID) { loadClassement(CURRENT_LEAGUE_ID); }
+  if (id === 'finances' && CURRENT_TEAM_ID) { loadFinances(CURRENT_TEAM_ID); }
   if (id === 'ai') initAIChat();
+}
+
+// ── FINANCES — budget, dépenses mercato, à venir : salaires + revenus de match ──
+async function loadFinances(teamId) {
+  const initEl = document.getElementById('fin-initial')
+  const depEl  = document.getElementById('fin-depense')
+  const restEl = document.getElementById('fin-restant')
+  const tbody  = document.getElementById('fin-tbody')
+  if (!teamId || !tbody) return
+
+  tbody.innerHTML = `<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--muted);">Chargement…</td></tr>`
+
+  try {
+    const { data: team, error: teamErr } = await sb.from('teams').select('budget').eq('id', teamId).single()
+    if (teamErr) throw teamErr
+
+    const { data: squad, error: squadErr } = await sb.from('squads')
+      .select('prix_achat, player:players(nom, poste)')
+      .eq('team_id', teamId)
+      .order('prix_achat', { ascending: false })
+    if (squadErr) throw squadErr
+
+    const depense = (squad || []).reduce((s, r) => s + (r.prix_achat || 0), 0)
+    const restant = team.budget || 0
+    const initial = restant + depense // budget de départ estimé = restant + déjà dépensé
+
+    if (initEl) initEl.textContent = Math.round(initial / 1e9) + 'M€'
+    if (depEl)  depEl.textContent  = Math.round(depense / 1e9) + 'M€'
+    if (restEl) restEl.textContent = Math.round(restant / 1e9) + 'M€'
+
+    if (!squad?.length) {
+      tbody.innerHTML = `<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--muted);">Aucun achat pour l'instant.</td></tr>`
+      return
+    }
+
+    tbody.innerHTML = squad.map(s => `
+      <tr>
+        <td style="padding:8px 10px;border-bottom:1px solid var(--border);">${s.player?.nom || '—'}</td>
+        <td style="padding:8px 10px;border-bottom:1px solid var(--border);"><span style="background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--gold-hi);font-family:var(--f-disp);font-size:9px;padding:2px 6px;">${s.player?.poste || ''}</span></td>
+        <td style="padding:8px 10px;border-bottom:1px solid var(--border);text-align:right;font-family:var(--f-mono);color:var(--gold-hi);">${Math.round((s.prix_achat||0)/1e9)}M€</td>
+      </tr>`).join('')
+  } catch (e) {
+    tbody.innerHTML = `<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--red);">Erreur : ${e?.message || e}</td></tr>`
+  }
 }
 
 // Grise visuellement les onglets verrouillés dans le menu latéral
@@ -2982,6 +3142,10 @@ document.addEventListener('DOMContentLoaded', () => {
     m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
   );
   updateNavAccess()
+  // Restaurer le nom de ligue affiché en en-tête après un rechargement de page
+  const savedLeagueName = localStorage.getItem('gtg-current-league-name')
+  const nameEl = document.getElementById('topbar-league-name')
+  if (savedLeagueName && nameEl) nameEl.textContent = savedLeagueName.toUpperCase()
   // Init Supabase
   initSupabaseClient();
 });
@@ -3203,12 +3367,42 @@ async function loadEncherePlayers() {
 
     encPlayers = data || []
     if (!encPlayers.length) encErrorMsg = 'Aucun joueur disponible pour le moment.'
+
+    // Charger les résultats déjà attribués (public, tout le monde peut voir qui a acheté quoi)
+    await loadEncResults(encLeagueId)
   } catch (e) {
     encErrorMsg = 'Erreur inattendue : ' + (e?.message || e)
   } finally {
     encLoaded = true
     encLoading = false
     updateEncBudget()
+  }
+}
+
+// Résultats du mercato — joueurs déjà attribués dans cette ligue (public, prix payé visible)
+async function loadEncResults(leagueId) {
+  const el = document.getElementById('enc-results-list')
+  if (!el || !leagueId) return
+  try {
+    const { data, error } = await sb.from('squads')
+      .select('prix_achat, created_at, player:players(nom, poste, club), team:teams(nom)')
+      .eq('league_id', leagueId)
+      .order('created_at', { ascending: false })
+
+    if (error) { el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--muted);font-size:12px;">Erreur : ${error.message}</div>`; return }
+    if (!data?.length) { el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--muted);font-size:12px;">Aucun joueur attribué pour l'instant.</div>`; return }
+
+    el.innerHTML = data.map(s => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--ink-3);border:1px solid var(--border);">
+        <span style="background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--gold-hi);font-family:var(--f-disp);font-size:9px;padding:2px 6px;">${s.player?.poste || ''}</span>
+        <div style="flex:1;min-width:0;">
+          <div style="font-family:var(--f-disp);font-size:12px;letter-spacing:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.player?.nom || '—'}</div>
+          <div style="font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${s.player?.club || ''} · ${s.team?.nom || '—'}</div>
+        </div>
+        <div style="font-family:var(--f-mono);font-size:13px;color:var(--gold-hi);white-space:nowrap;">${Math.round((s.prix_achat||0)/1e9)}M€</div>
+      </div>`).join('')
+  } catch (e) {
+    el.innerHTML = `<div style="padding:14px;text-align:center;color:var(--muted);font-size:12px;">Erreur : ${e?.message || e}</div>`
   }
 }
 
