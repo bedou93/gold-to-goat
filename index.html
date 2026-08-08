@@ -1746,6 +1746,32 @@ body::after {
     </div>
   </div>
 
+  <!-- Écran configuration d'équipe — après création/adhésion à une ligue -->
+  <div id="ligue-setup" style="display:none;">
+    <div class="panel panel-gold cut" style="padding:20px;max-width:500px;margin:0 auto;">
+      <div class="panel-label">CONFIGURE TON ÉQUIPE</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:16px;" id="setup-league-label"></div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">NOM DE L'ÉQUIPE</div>
+          <input id="setup-team-nom" style="width:100%;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);padding:10px;font-size:14px;outline:none;" placeholder="Ex : Les Invincibles FC">
+        </div>
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">NOM DU STADE</div>
+          <input id="setup-stade-nom" style="width:100%;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);padding:10px;font-size:14px;outline:none;" placeholder="Ex : Stade Vélodrome">
+        </div>
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">NOM DU COACH</div>
+          <input id="setup-coach-nom" style="width:100%;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);padding:10px;font-size:14px;outline:none;" placeholder="Ex : Romain">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:18px;">
+        <button class="btn btn-outline btn-sm" onclick="cancelTeamSetup()">ANNULER</button>
+        <button class="btn btn-gold" style="flex:1" onclick="confirmTeamSetup()">✅ VALIDER MON ÉQUIPE</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Écran gestion de ligue — réservé au créateur (leagues.admin_id) -->
   <div id="ligue-manage" style="display:none;">
     <div class="panel panel-gold cut" style="padding:20px;max-width:600px;margin:0 auto;">
@@ -2112,14 +2138,14 @@ async function loadDashboard() {
       const subEl  = document.getElementById('dash-team-sub')
       if (nameEl) nameEl.innerHTML = `<em>${pseudo.toUpperCase()}</em>`
       if (subEl)  subEl.textContent = `Bienvenue ! Crée ou rejoins une ligue pour commencer.`
-      if (budgetDisplay) budgetDisplay.textContent = '350M€'
+      if (budgetDisplay) budgetDisplay.textContent = '500M€'
       await loadMesLigues()
       return
     }
 
     // Prendre la première équipe active
     const team = teams[0]
-    const budgetM = Math.round((team.budget || 350000000000) / 1e9)
+    const budgetM = Math.round((team.budget || 500000000000) / 1e9)
     const ligueName = team.league?.nom || 'Ma Ligue'
 
     const nameEl = document.getElementById('dash-team-name')
@@ -2370,19 +2396,84 @@ async function claimPlannedTeam(plannedId, leagueId) {
       .select('id').eq('league_id', leagueId).eq('coach_id', CURRENT_USER.id).maybeSingle()
     if (existing) { toast('Tu es déjà dans cette ligue !', 'error'); return }
 
-    const { data: team, error: e1 } = await sb.from('teams').insert({
+    // Ouvrir la configuration d'équipe (nom pré-rempli, budget MPG déjà fixé)
+    openTeamSetup({
+      leagueId,
+      plannedId,
+      budget: planned.budget,
+      defaultNom: planned.nom,
+      leagueLabel: `Budget MPG restant : ${Math.round(planned.budget / 1e9)}M€`
+    })
+  } catch (e) {
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+
+// ── CONFIGURATION D'ÉQUIPE — après création/adhésion à une ligue ──
+let pendingTeamSetup = null // { leagueId, code?, plannedId?, budget, defaultNom, leagueLabel }
+
+function openTeamSetup(opts) {
+  pendingTeamSetup = opts
+  const labelEl = document.getElementById('setup-league-label')
+  if (labelEl) labelEl.textContent = opts.leagueLabel || ''
+  document.getElementById('setup-team-nom').value  = opts.defaultNom || ''
+  document.getElementById('setup-stade-nom').value = ''
+  document.getElementById('setup-coach-nom').value = CURRENT_PROFILE?.pseudo || ''
+  showLigueScreen('setup')
+}
+
+function cancelTeamSetup() {
+  pendingTeamSetup = null
+  showLigueScreen('home')
+}
+
+async function confirmTeamSetup() {
+  if (!pendingTeamSetup || !sb || !CURRENT_USER) return
+  const nom      = document.getElementById('setup-team-nom')?.value?.trim()
+  const stade    = document.getElementById('setup-stade-nom')?.value?.trim()
+  const coachNom = document.getElementById('setup-coach-nom')?.value?.trim()
+
+  if (!nom)      { toast('Donne un nom à ton équipe', 'error'); return }
+  if (!coachNom) { toast('Indique ton nom de coach', 'error'); return }
+
+  const { leagueId, budget, plannedId, code } = pendingTeamSetup
+
+  try {
+    // Sécurité : vérifier qu'on n'a pas déjà une équipe dans cette ligue
+    const { data: existing } = await sb.from('teams')
+      .select('id').eq('league_id', leagueId).eq('coach_id', CURRENT_USER.id).maybeSingle()
+    if (existing) {
+      toast('Tu es déjà dans cette ligue !', 'error')
+      pendingTeamSetup = null
+      showLigueScreen('home')
+      return
+    }
+
+    const { data: team, error } = await sb.from('teams').insert({
       league_id: leagueId,
       coach_id: CURRENT_USER.id,
-      nom: planned.nom,
-      budget: planned.budget
+      nom,
+      stade,
+      budget: budget ?? 500000000000
     }).select('id').single()
-    if (e1) throw e1
+    if (error) throw error
 
-    const { error: e2 } = await sb.from('mpg_planned_teams')
-      .update({ claimed_by_team_id: team.id }).eq('id', plannedId)
-    if (e2) console.warn('[GTG] Erreur marquage équipe réclamée:', e2.message)
+    // Si on venait de réclamer une équipe MPG prédéfinie, la marquer comme prise
+    if (plannedId) {
+      const { error: eClaim } = await sb.from('mpg_planned_teams')
+        .update({ claimed_by_team_id: team.id }).eq('id', plannedId)
+      if (eClaim) console.warn('[GTG] Erreur marquage équipe réclamée:', eClaim.message)
+    }
 
-    toast(`✅ Tu as rejoint "${planned.nom}" · Budget restant ${Math.round(planned.budget / 1e9)}M€`, 'success')
+    // Mettre à jour le pseudo du coach si modifié dans ce formulaire
+    if (coachNom && CURRENT_PROFILE && coachNom !== CURRENT_PROFILE.pseudo) {
+      const { error: eProfile } = await sb.from('profiles').update({ pseudo: coachNom }).eq('id', CURRENT_USER.id)
+      if (!eProfile) CURRENT_PROFILE.pseudo = coachNom
+    }
+
+    toast(`🎉 Équipe "${nom}" prête !${code ? ' Code ligue : ' + code : ''}`, 'success')
+    pendingTeamSetup = null
+    if (code) showInviteCode(code)
     showLigueScreen('home')
     await loadMesLigues()
     await loadDashboard()
@@ -2494,7 +2585,7 @@ async function createLigue() {
       nom, code,
       admin_id: CURRENT_USER.id,
       nb_joueurs: nbJoueurs,
-      budget_initial: 350000000000,
+      budget_initial: 500000000000,
       nb_tours: 3,
       statut: 'recrutement'
     }).select('id, nom, code')
@@ -2519,25 +2610,14 @@ async function createLigue() {
       return
     }
 
-    // 2b. Mode classique : équipe auto-créée pour le créateur avec le budget par défaut
-    const { data: teamData, error: e2 } = await sb.from('teams').insert({
-      league_id: leagueId,
-      coach_id: CURRENT_USER.id,
-      nom: pseudo + ' FC',
-      budget: 350000000000
-    }).select('id')
-
-    if (e2) {
-      console.error('[GTG] Erreur création équipe:', e2)
-      throw e2
-    }
-    console.log('[GTG] Équipe créée:', teamData)
-
-    toast(`🎉 Ligue "${nom}" créée ! Code : ${code}`, 'success')
-    showInviteCode(code)
-    showLigueScreen('home')
-    await loadMesLigues()
-    await loadDashboard()
+    // 2b. Mode classique : ouvrir la configuration d'équipe pour le créateur
+    openTeamSetup({
+      leagueId,
+      code,
+      budget: 500000000000,
+      defaultNom: pseudo + ' FC',
+      leagueLabel: `Ligue : ${nom}`
+    })
 
   } catch(e) {
     console.error('[GTG] createLigue error:', e)
@@ -2559,18 +2639,12 @@ async function joinLigue() {
     if (existing) { toast('Tu es déjà dans cette ligue !', 'error'); return }
 
     const pseudo = CURRENT_PROFILE?.pseudo || CURRENT_USER.email.split('@')[0]
-    const { error } = await sb.from('teams').insert({
-      league_id: leagueId,
-      coach_id: CURRENT_USER.id,
-      nom: pseudo + ' FC',
-      budget: 350000000000
+    openTeamSetup({
+      leagueId,
+      budget: 500000000000,
+      defaultNom: pseudo + ' FC',
+      leagueLabel: `Code : ${leagueCode || ''}`
     })
-    if (error) throw error
-
-    toast('✅ Tu as rejoint la ligue !', 'success')
-    showLigueScreen('home')
-    await loadMesLigues()
-    await loadDashboard()
 
   } catch(e) {
     toast('Erreur : ' + e.message, 'error')
@@ -3076,7 +3150,7 @@ function dbGo(p) {
 // ══════════════════════════════════════════
 // MODULE : MERCATO — Connecté à Supabase
 // ══════════════════════════════════════════
-let encBudget  = 350;  // M€
+let encBudget  = 500;  // M€
 let encBasket  = {};   // player_id → {nom, cote, montant}
 let encEngaged = 0;
 let encPlayers = [];   // joueurs chargés depuis Supabase
@@ -3544,7 +3618,7 @@ function endSim() {
 // MODULE : LIGUE
 // ══════════════════════════════════════════
 function showLigueScreen(id) {
-  ['home','create','join','mpg','claim','manage'].forEach(s=>{
+  ['home','create','join','mpg','claim','manage','setup'].forEach(s=>{
     const el=document.getElementById('ligue-'+s);
     if(el) el.style.display = s===id ? 'block':'none';
   });
