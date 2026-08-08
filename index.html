@@ -1,0 +1,3947 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>GOLD TO GOAT — Fantasy Ligue 1</title>
+
+<!-- ═══ PWA META TAGS ═══ -->
+<meta name="application-name" content="GTG">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GTG">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#000000">
+<meta name="description" content="Gold to Goat — Fantasy Football Ligue 1. Enchères cachées, duels GTG, notes en direct.">
+
+<!-- Open Graph (partage WhatsApp/réseaux) -->
+<meta property="og:title" content="GOLD TO GOAT — Fantasy Ligue 1">
+<meta property="og:description" content="Le fantasy football ultime de la Ligue 1. Enchères cachées · Duels GTG · Notes live">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://goldtogoat2.netlify.app">
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="manifest.json">
+
+<!-- Icônes Apple (splash screen) -->
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icon-192.png">
+
+<!-- Favicon -->
+<link rel="icon" type="image/png" sizes="32x32" href="icon-192.png">
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700;1,900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════
+   GOLD TO GOAT — Blue Lock Manga Design System
+   ────────────────────────────────────────────────
+   Aesthetic : Sports Manga · Blue Lock / Captain Tsubasa
+   Ink lines · Halftone · Speed lines · Panel cuts
+   Black × Gold × Ink White × Electric Cyan (accent)
+   Typography : Oswald (display) + Barlow Condensed (UI)
+═══════════════════════════════════════════════════ */
+
+:root {
+  /* Palette */
+  --ink:       #000000;
+  --ink-deep:  #050505;
+  --ink-panel: #0c0c0c;
+  --ink-card:  #111111;
+  --ink-2:     #1a1a1a;
+  --ink-3:     #242424;
+  --paper:     #f0e8cc;   /* crème GDD */
+  --paper-2:   #e8debb;
+  --gold:      #c8a020;
+  --gold-hi:   #ffe060;
+  --gold-lo:   #7a5c10;
+  --gold-dim:  rgba(200,160,32,.12);
+  --gold-b:    rgba(200,160,32,.32);
+  --white:     #f5f0e8;
+  --cyan:      #00d4ff;   /* accent électrique Blue Lock */
+  --cyan-d:    rgba(0,212,255,.12);
+  --cyan-b:    rgba(0,212,255,.35);
+  --red:       #ff1a2e;
+  --red-d:     rgba(255,26,46,.12);
+  --muted:     #5a5a5a;
+  --border:    #2a2a2a;
+  --border-2:  #333333;
+
+  /* Typo */
+  --f-disp: 'Oswald', sans-serif;
+  --f-ui:   'Barlow Condensed', sans-serif;
+  --f-mono: 'DM Mono', monospace;
+
+  /* Geometry */
+  --r: 0px;   /* manga = pas d'arrondi — angles droits */
+  --sidebar-w: 72px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+
+body {
+  background: var(--ink-deep);
+  color: var(--white);
+  font-family: var(--f-ui);
+  min-height: 100vh;
+  overflow-x: hidden;
+  cursor: default;
+}
+
+/* ── HALFTONE TEXTURE (fond manga) ── */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    radial-gradient(circle, rgba(200,160,32,.03) 1px, transparent 1px);
+  background-size: 20px 20px;
+  opacity: 1;
+}
+
+/* ── SPEED LINES DÉCORATIVES (coins) ── */
+body::after {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background:
+    conic-gradient(from 225deg at 0% 0%,   transparent 80deg, rgba(200,160,32,.04) 82deg, transparent 84deg),
+    conic-gradient(from 45deg  at 100% 100%, transparent 80deg, rgba(0,212,255,.03)  82deg, transparent 84deg);
+}
+
+/* ─────────────────────────────────────
+   SIDEBAR — Style panneau manga
+───────────────────────────────────── */
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0;
+  width: var(--sidebar-w); z-index: 300;
+  background: var(--ink);
+  border-right: 3px solid var(--gold);
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 0 16px;
+  /* Effet "case manga" avec trait diagonal en haut */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Barre or verticale décorative sur le bord gauche */
+.sidebar::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: linear-gradient(180deg, var(--gold-hi), var(--gold), var(--gold-lo));
+}
+
+/* Logo dans la sidebar */
+.sidebar-logo {
+  width: 100%; padding: 14px 10px 10px;
+  display: flex; align-items: center; justify-content: center;
+  border-bottom: 2px solid var(--ink-2);
+  position: relative;
+}
+.sidebar-logo::after {
+  content: '';
+  position: absolute; bottom: 0; left: 10%; right: 10%; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+}
+
+/* ── NAVIGATION ITEMS ── */
+.nav-items {
+  flex: 1; width: 100%;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 8px 0; gap: 2px;
+}
+
+.nav-item {
+  width: 54px; height: 54px;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 3px;
+  cursor: pointer; position: relative;
+  transition: all .15s;
+  /* Pas de border-radius — style manga */
+  border: 1.5px solid transparent;
+}
+.nav-item::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+  background: var(--gold);
+  transition: width .15s;
+}
+.nav-item:hover::before { width: 3px; }
+.nav-item:hover { background: var(--ink-2); border-color: var(--ink-3); }
+.nav-item.active {
+  background: var(--gold-dim);
+  border-color: var(--gold-b);
+}
+.nav-item.active::before { width: 3px; }
+
+.nav-icon { font-size: 20px; line-height: 1; }
+.nav-label {
+  font-family: var(--f-disp);
+  font-size: 7px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); line-height: 1;
+}
+.nav-item.active .nav-label { color: var(--gold); }
+
+/* Badge notification */
+.nav-badge {
+  position: absolute; top: 6px; right: 6px;
+  width: 8px; height: 8px; border-radius: 0; /* carré — manga */
+  background: var(--red); border: 1px solid var(--ink);
+  animation: inkBlink 2s infinite;
+}
+@keyframes inkBlink { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+.sidebar-bottom {
+  width: 100%; padding: 10px;
+  border-top: 2px solid var(--ink-2);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+
+.player-chip {
+  width: 38px; height: 38px;
+  background: var(--gold-dim);
+  border: 2px solid var(--gold);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-disp); font-size: 18px; font-weight: 700;
+  color: var(--gold); cursor: pointer;
+  transition: all .15s;
+  clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
+}
+.player-chip:hover { background: var(--gold); color: var(--ink); }
+
+/* ─────────────────────────────────────
+   MAIN CONTENT
+───────────────────────────────────── */
+.main {
+  margin-left: var(--sidebar-w);
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  position: relative; z-index: 1;
+}
+
+/* ─────────────────────────────────────
+   TOPBAR — Style panel titre manga
+───────────────────────────────────── */
+.topbar {
+  height: 56px;
+  background: var(--ink);
+  border-bottom: 3px solid var(--gold);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 14px;
+  position: sticky; top: 0; z-index: 200;
+  /* Diagonal cut style manga frame */
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Ligne cyan accent en bas du topbar */
+.topbar::after {
+  content: '';
+  position: absolute; bottom: -5px; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent 5%, var(--cyan) 20%, var(--cyan) 80%, transparent 95%);
+  opacity: .3;
+}
+
+.topbar-title {
+  font-family: var(--f-disp);
+  font-size: 22px; font-weight: 700;
+  letter-spacing: 6px; text-transform: uppercase;
+  color: var(--gold);
+  display: flex; align-items: center; gap: 10px;
+}
+.topbar-title-sub {
+  font-family: var(--f-disp);
+  font-size: 11px; letter-spacing: 3px; color: var(--muted);
+  font-weight: 400;
+}
+
+.topbar-divider { width: 2px; height: 26px; background: var(--ink-3); }
+
+.topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+/* Badges topbar — style manga */
+.tb-badge {
+  border: 2px solid var(--border-2);
+  padding: 4px 12px;
+  font-family: var(--f-disp); font-size: 12px; letter-spacing: 1px;
+  display: flex; align-items: center; gap: 6px;
+  background: var(--ink-2);
+  clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%);
+}
+.tb-badge.gold-b { border-color: var(--gold-b); background: var(--gold-dim); color: var(--gold-hi); }
+.tb-badge .bv { font-size: 15px; font-weight: 700; font-family: var(--f-mono); }
+
+.live-ring { width: 8px; height: 8px; background: var(--red); animation: inkBlink 1s infinite; }
+
+/* ─────────────────────────────────────
+   PAGES
+───────────────────────────────────── */
+.page { display: none; padding: 20px; }
+.page.active { display: block; animation: pageSlash .2s ease; }
+@keyframes pageSlash {
+  from { opacity: 0; transform: translateX(-8px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ─────────────────────────────────────
+   SECTION HEADERS — Manga chapter title
+───────────────────────────────────── */
+.chapter {
+  margin-bottom: 20px; position: relative;
+  display: flex; align-items: flex-end; gap: 14px;
+}
+.chapter-num {
+  font-family: var(--f-disp);
+  font-size: 11px; letter-spacing: 3px; color: var(--gold-lo);
+  text-transform: uppercase; line-height: 1;
+  border-left: 3px solid var(--gold); padding-left: 8px;
+}
+.chapter-title {
+  font-family: var(--f-disp);
+  font-size: 38px; font-weight: 700; letter-spacing: 4px;
+  text-transform: uppercase; color: var(--white); line-height: 1;
+}
+.chapter-title em { color: var(--gold); font-style: normal; }
+.chapter-line {
+  flex: 1; height: 3px;
+  background: linear-gradient(90deg, var(--gold), var(--ink-3));
+}
+.chapter-actions { display: flex; gap: 8px; align-items: center; }
+
+/* ─────────────────────────────────────
+   MANGA PANELS (cards)
+   Style "case de manga" — angles droits,
+   bordures épaisses, ombre décalée
+───────────────────────────────────── */
+.panel {
+  background: var(--ink-card);
+  border: 2px solid var(--border-2);
+  position: relative; overflow: hidden;
+  /* Ombre décalée manga */
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, var(--gold-lo), var(--gold), var(--gold-lo));
+}
+/* Coin coupé (clip manga) */
+.panel.cut {
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+}
+.panel.cut::after {
+  content: '';
+  position: absolute; top: 0; right: 0;
+  width: 14px; height: 14px;
+  border-left: 2px solid var(--gold-lo);
+  border-bottom: 2px solid var(--gold-lo);
+  background: var(--gold-dim);
+}
+
+.panel-label {
+  font-family: var(--f-disp);
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+  border-left: 3px solid var(--gold); padding-left: 8px;
+}
+
+/* Panel accent GOLD */
+.panel.panel-gold {
+  background: linear-gradient(135deg, #100d00, var(--ink-card));
+  border-color: var(--gold-b);
+  box-shadow: 4px 4px 0 var(--gold-lo);
+}
+.panel.panel-gold::before {
+  background: linear-gradient(90deg, var(--gold), var(--gold-hi), var(--gold));
+  height: 4px;
+}
+
+/* Panel accent CYAN */
+.panel.panel-cyan {
+  border-color: var(--cyan-b);
+  box-shadow: 4px 4px 0 rgba(0,212,255,.2);
+}
+.panel.panel-cyan::before { background: var(--cyan); height: 3px; }
+
+/* ─────────────────────────────────────
+   GRIDS
+───────────────────────────────────── */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.g3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
+.g4 { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+.gcol { display: flex; flex-direction: column; gap: 14px; }
+
+/* ─────────────────────────────────────
+   KPI — Style score manga
+───────────────────────────────────── */
+.kpi-block {
+  background: var(--ink-2);
+  border: 2px solid var(--border);
+  padding: 14px 16px; position: relative;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+}
+.kpi-block::after {
+  content: ''; position: absolute; top: 0; right: 0;
+  width: 10px; height: 10px;
+  border-left: 1px solid var(--gold-lo); border-bottom: 1px solid var(--gold-lo);
+  background: var(--gold-dim);
+}
+.kpi-val {
+  font-family: var(--f-disp);
+  font-size: 38px; font-weight: 700; line-height: 1;
+  color: var(--gold-hi);
+}
+.kpi-label {
+  font-family: var(--f-ui);
+  font-size: 10px; text-transform: uppercase; letter-spacing: 2px;
+  color: var(--muted); margin-top: 3px;
+}
+.kpi-delta { font-size: 11px; margin-top: 4px; font-weight: 700; }
+.delta-up { color: var(--cyan); }
+.delta-dn { color: var(--red); }
+.delta-eq { color: var(--muted); }
+
+/* ─────────────────────────────────────
+   BUTTONS — Manga action buttons
+───────────────────────────────────── */
+.btn {
+  padding: 8px 20px; border: 2px solid; cursor: pointer;
+  font-family: var(--f-disp); font-size: 13px;
+  font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  transition: all .12s; display: inline-flex; align-items: center; gap: 6px;
+  position: relative; overflow: hidden;
+  /* Pas d'arrondi */
+  border-radius: 0;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+.btn::before {
+  content: '';
+  position: absolute; left: -100%; top: 0; bottom: 0; width: 100%;
+  background: rgba(255,255,255,.06);
+  transition: left .2s;
+}
+.btn:hover::before { left: 0; }
+.btn:hover { transform: translate(-2px, -2px); }
+.btn:active { transform: translate(1px, 1px); }
+
+.btn-gold {
+  background: var(--gold); border-color: var(--gold-hi); color: var(--ink);
+  box-shadow: 3px 3px 0 var(--gold-lo);
+}
+.btn-gold:hover { background: var(--gold-hi); box-shadow: none; }
+
+.btn-outline {
+  background: transparent; border-color: var(--border-2); color: var(--white);
+  box-shadow: 3px 3px 0 var(--ink-3);
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); box-shadow: none; }
+
+.btn-cyan {
+  background: transparent; border-color: var(--cyan); color: var(--cyan);
+  box-shadow: 3px 3px 0 rgba(0,212,255,.2);
+}
+.btn-cyan:hover { background: var(--cyan-d); box-shadow: none; }
+
+.btn-red {
+  background: var(--red-d); border-color: var(--red); color: var(--red);
+  box-shadow: 3px 3px 0 rgba(255,26,46,.2);
+}
+
+.btn-sm { padding: 5px 12px; font-size: 11px; }
+.btn-xs { padding: 3px 8px; font-size: 10px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+/* ─────────────────────────────────────
+   POSITION BADGES — Style manga
+───────────────────────────────────── */
+.pos { font-family: var(--f-disp); font-size: 10px; letter-spacing: 1.5px;
+  padding: 2px 7px; border: 1.5px solid; }
+.pos-GK  { color: var(--gold-hi); border-color: var(--gold); background: var(--gold-dim); }
+.pos-DEF { color: #00aaff; border-color: #0088cc; background: rgba(0,136,204,.1); }
+.pos-MID { color: #cc88ff; border-color: #9944cc; background: rgba(153,68,204,.1); }
+.pos-ATT { color: var(--red); border-color: var(--red); background: var(--red-d); }
+
+/* ─────────────────────────────────────
+   PITCH — Terrain manga
+───────────────────────────────────── */
+.pitch {
+  background:
+    /* Lignes de terrain style schéma tactique */
+    repeating-linear-gradient(180deg,
+      transparent 0, transparent 39px,
+      rgba(255,255,255,.04) 39px, rgba(255,255,255,.04) 40px),
+    /* Fond vert très sombre */
+    linear-gradient(180deg, #060f06 0%, #040c04 100%);
+  border: 2.5px solid rgba(200,160,32,.4);
+  padding: 14px 10px;
+  min-height: 500px; position: relative;
+}
+/* Ligne médiane */
+.pitch::before {
+  content: '';
+  position: absolute; top: 50%; left: 6%; right: 6%; height: 1.5px;
+  background: rgba(200,160,32,.25);
+}
+/* Cercle central */
+.pitch::after {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  width: 60px; height: 60px; border-radius: 50%;
+  border: 1.5px solid rgba(200,160,32,.2);
+  transform: translate(-50%, -50%);
+}
+.pitch-row { display: flex; justify-content: center; gap: 10px; margin: 8px 0; }
+
+/* Slots joueurs */
+.pslot {
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  cursor: pointer; transition: transform .15s;
+}
+.pslot:hover { transform: translateY(-4px); }
+
+.pslot-av {
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-disp); font-size: 14px; font-weight: 700;
+  border: 2.5px solid; position: relative;
+  /* Forme hexagonale manga */
+  clip-path: polygon(50% 0%, 93% 25%, 93% 75%, 50% 100%, 7% 75%, 7% 25%);
+  box-shadow: 0 4px 12px rgba(0,0,0,.6);
+}
+.pslot-av.GK  { background: rgba(200,160,32,.2); border-color: var(--gold); color: var(--gold-hi); }
+.pslot-av.DEF { background: rgba(0,136,204,.2); border-color: #0088cc; color: #00aaff; }
+.pslot-av.MID { background: rgba(153,68,204,.2); border-color: #9944cc; color: #cc88ff; }
+.pslot-av.ATT { background: rgba(255,26,46,.2); border-color: var(--red); color: var(--red); }
+
+.pslot-score {
+  position: absolute; bottom: -6px; right: -6px;
+  background: var(--gold); color: var(--ink);
+  font-size: 9px; font-weight: 900; font-family: var(--f-mono);
+  padding: 1px 4px; border: 1.5px solid var(--ink);
+  border-radius: 0;
+}
+.pslot-score.low { background: var(--red); color: var(--white); }
+.pslot-score.med { background: #e8a020; }
+
+.pslot-name {
+  font-family: var(--f-disp); font-size: 10px; letter-spacing: 1px;
+  color: var(--white); text-align: center;
+  max-width: 60px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.pslot-club { font-size: 9px; color: var(--muted); }
+
+/* ─────────────────────────────────────
+   TABLE — Style datatable manga
+───────────────────────────────────── */
+.gtg-table { width: 100%; border-collapse: collapse; }
+.gtg-table thead th {
+  padding: 9px 12px; text-align: left;
+  font-family: var(--f-disp); font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  border-bottom: 2px solid var(--gold);
+  background: var(--ink-2); cursor: pointer;
+  transition: color .15s;
+}
+.gtg-table thead th:hover { color: var(--gold); }
+.gtg-table tbody td {
+  padding: 9px 12px; font-size: 13px;
+  border-bottom: 1px solid var(--border);
+}
+.gtg-table tbody tr:hover td { background: var(--gold-dim); }
+.gtg-table tbody tr:last-child td { border-bottom: none; }
+
+/* ─────────────────────────────────────
+   SCORE — Style score manga géant
+───────────────────────────────────── */
+.score-panel {
+  background: var(--ink);
+  border: 3px solid var(--gold);
+  padding: 20px 24px;
+  position: relative;
+  box-shadow: 6px 6px 0 var(--gold-lo);
+}
+.score-panel::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-hi), var(--gold));
+}
+.score-val {
+  font-family: var(--f-disp);
+  font-size: 72px; font-weight: 700; letter-spacing: 6px;
+  line-height: 1;
+}
+.score-val .h { color: var(--gold-hi); }
+.score-val .sep { color: var(--muted); font-size: 56px; margin: 0 4px; }
+.score-val .a { color: var(--white); }
+.score-team {
+  font-family: var(--f-disp);
+  font-size: 18px; letter-spacing: 3px; text-transform: uppercase;
+  line-height: 1;
+}
+.score-team.home { color: var(--gold); }
+
+/* ─────────────────────────────────────
+   RANK LIST — Style classement manga
+───────────────────────────────────── */
+.rank-row {
+  display: flex; align-items: center;
+  padding: 11px 14px;
+  background: var(--ink-2); border: 1.5px solid var(--border);
+  margin-bottom: 6px; cursor: pointer;
+  transition: all .12s; position: relative;
+  /* Ligne dorée animée à gauche */
+}
+.rank-row::before {
+  content: '';
+  position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--gold);
+  transform: scaleY(0); transform-origin: bottom;
+  transition: transform .15s;
+}
+.rank-row:hover::before { transform: scaleY(1); }
+.rank-row:hover { border-color: var(--border-2); background: var(--ink-3); transform: translateX(4px); }
+.rank-row.me {
+  background: var(--gold-dim);
+  border-color: var(--gold-b);
+  box-shadow: 3px 3px 0 var(--gold-lo);
+}
+.rank-row.me::before { transform: scaleY(1); }
+
+.rnum {
+  font-family: var(--f-disp); font-size: 22px; font-weight: 700;
+  width: 36px; color: var(--muted); line-height: 1;
+}
+.rnum.r1 { color: var(--gold-hi); }
+.rnum.r2 { color: #c0c0c0; }
+.rnum.r3 { color: #cd7f32; }
+.r-av {
+  width: 34px; height: 34px;
+  background: var(--ink-3); border: 2px solid var(--border-2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--f-disp); font-size: 14px; color: var(--gold);
+  margin-right: 10px;
+  clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%);
+}
+.r-info { flex: 1; }
+.r-name { font-family: var(--f-disp); font-size: 16px; letter-spacing: 1px; font-weight: 700; }
+.r-coach { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+.r-pts {
+  font-family: var(--f-disp); font-size: 28px; color: var(--gold-hi); line-height: 1;
+}
+.r-pts span { font-family: var(--f-ui); font-size: 10px; color: var(--muted); }
+
+/* ─────────────────────────────────────
+   FEED D'ÉVÉNEMENTS — Style bulles manga
+───────────────────────────────────── */
+.feed-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 12px; border: 1.5px solid var(--border);
+  background: var(--ink-2); margin-bottom: 5px;
+  animation: feedSlash .25s ease;
+  position: relative;
+}
+@keyframes feedSlash {
+  from { transform: translateX(-6px); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+/* Coin coupé manga */
+.feed-item::after {
+  content: '';
+  position: absolute; top: 0; right: 0;
+  border-style: solid; border-width: 0 8px 8px 0;
+  border-color: transparent var(--border) transparent transparent;
+}
+.feed-item.goal {
+  background: var(--gold-dim); border-color: var(--gold-b);
+  border-left: 4px solid var(--gold);
+}
+.feed-item.goal::after { border-color: transparent var(--gold-lo) transparent transparent; }
+.feed-item.goal-real {
+  background: rgba(34,221,80,.06); border-color: rgba(34,221,80,.25);
+  border-left: 4px solid #22dd50;
+}
+.feed-item.card { border-left: 4px solid #f1c40f; }
+.feed-item.sub  { border-left: 4px solid #9944cc; }
+.fi-min { font-family: var(--f-mono); font-size: 11px; color: var(--muted); width: 26px; flex-shrink: 0; margin-top: 2px; }
+.fi-ico { font-size: 17px; flex-shrink: 0; }
+.fi-body { flex: 1; }
+.fi-title { font-family: var(--f-disp); font-size: 13px; letter-spacing: 1px; line-height: 1.4; }
+.fi-detail { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+/* ─────────────────────────────────────
+   SEARCH / FILTERS
+───────────────────────────────────── */
+.sf-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.sf-input {
+  flex: 1; min-width: 180px;
+  background: var(--ink-2); border: 2px solid var(--border-2);
+  color: var(--white); font-family: var(--f-ui); font-size: 13px;
+  padding: 8px 12px; outline: none;
+  transition: border-color .15s;
+}
+.sf-input:focus { border-color: var(--gold); }
+.sf-input::placeholder { color: var(--muted); }
+.sf-sel {
+  background: var(--ink-2); border: 2px solid var(--border-2);
+  color: var(--white); font-family: var(--f-disp); font-size: 12px;
+  letter-spacing: 1px; padding: 8px 12px; cursor: pointer;
+  text-transform: uppercase; outline: none;
+}
+.chip-row { display: flex; gap: 4px; flex-wrap: wrap; }
+.chip {
+  padding: 5px 12px; border: 2px solid var(--border-2);
+  cursor: pointer; font-family: var(--f-disp); font-size: 11px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--muted); background: none; transition: all .12s;
+  clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+}
+.chip:hover { color: var(--white); border-color: var(--muted); }
+.chip.cALL { background: var(--gold); border-color: var(--gold-hi); color: var(--ink); }
+.chip.cGK  { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-hi); }
+.chip.cDEF { background: rgba(0,136,204,.12); border-color: #0088cc; color: #00aaff; }
+.chip.cMID { background: rgba(153,68,204,.12); border-color: #9944cc; color: #cc88ff; }
+.chip.cATT { background: var(--red-d); border-color: var(--red); color: var(--red); }
+
+/* ─────────────────────────────────────
+   PROGRESS BAR
+───────────────────────────────────── */
+.prog { background: var(--ink-3); height: 5px; position: relative; }
+.prog-f { height: 100%; background: linear-gradient(90deg, var(--gold-lo), var(--gold)); transition: width .5s ease; }
+.prog-f::after {
+  content: '';
+  position: absolute; right: 0; top: -2px; bottom: -2px; width: 3px;
+  background: var(--gold-hi);
+}
+
+/* ─────────────────────────────────────
+   MODAL
+───────────────────────────────────── */
+.modal-bg {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,.9); align-items: center; justify-content: center;
+}
+.modal-bg.open { display: flex; }
+.modal {
+  background: var(--ink-card); border: 3px solid var(--gold);
+  padding: 28px; max-width: 480px; width: 93%;
+  animation: modalCut .2s ease; position: relative;
+  box-shadow: 8px 8px 0 var(--gold-lo);
+  clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px));
+}
+@keyframes modalCut {
+  from { transform: scale(.92) rotate(-1deg); opacity: 0; }
+  to   { transform: none; opacity: 1; }
+}
+.modal::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 20px; height: 4px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-hi));
+}
+.modal-title {
+  font-family: var(--f-disp); font-size: 28px; letter-spacing: 4px;
+  color: var(--gold-hi); text-transform: uppercase; margin-bottom: 4px;
+}
+.modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; letter-spacing: 1px; }
+.modal-footer { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
+
+/* ─────────────────────────────────────
+   TOAST
+───────────────────────────────────── */
+.toasts { position: fixed; bottom: 20px; right: 20px; z-index: 999; display: flex; flex-direction: column-reverse; gap: 8px; }
+.toast {
+  background: var(--ink); border: 2px solid var(--border-2);
+  padding: 10px 16px; font-family: var(--f-disp); font-size: 14px;
+  letter-spacing: 1px; min-width: 240px;
+  display: flex; align-items: center; gap: 8px;
+  animation: toastCut .2s ease;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+  box-shadow: 4px 4px 0 rgba(0,0,0,.5);
+}
+@keyframes toastCut { from{transform:translateX(14px);opacity:0} to{transform:none;opacity:1} }
+.toast.success { border-color: rgba(34,221,80,.5); color: #22dd50; }
+.toast.error   { border-color: rgba(255,26,46,.5); color: var(--red); }
+.toast.info    { border-color: var(--gold-b); color: var(--gold); }
+
+/* ─────────────────────────────────────
+   ITABS — Manga chapter tabs
+───────────────────────────────────── */
+.itabs { display: flex; gap: 0; margin-bottom: 16px; border-bottom: 2px solid var(--gold-lo); }
+.itab {
+  padding: 8px 18px; cursor: pointer;
+  font-family: var(--f-disp); font-size: 12px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted);
+  border: none; background: none; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; transition: all .15s;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+.itab:hover { color: var(--white); background: var(--ink-2); }
+.itab.active { color: var(--gold-hi); border-bottom-color: var(--gold); background: var(--gold-dim); }
+
+/* ─────────────────────────────────────
+   HERO PANEL — Case manga principale
+───────────────────────────────────── */
+.hero-panel {
+  background: var(--ink);
+  border: 3px solid var(--gold);
+  padding: 24px 28px;
+  margin-bottom: 18px;
+  position: relative; overflow: hidden;
+  box-shadow: 6px 6px 0 var(--gold-lo);
+  /* Clip coin manga */
+  clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+}
+/* Speed lines déco en fond */
+.hero-panel::before {
+  content: '';
+  position: absolute; right: -40px; top: -40px;
+  width: 300px; height: 300px; pointer-events: none; opacity: .06;
+  background: conic-gradient(from 0deg at 80% 20%,
+    var(--gold) 0deg, transparent 2deg, transparent 8deg,
+    var(--gold) 10deg, transparent 12deg, transparent 18deg,
+    var(--gold) 20deg, transparent 22deg, transparent 28deg,
+    var(--gold) 30deg, transparent 32deg, transparent 38deg,
+    var(--gold) 40deg, transparent 42deg);
+}
+.hero-panel::after {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 24px; height: 4px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-hi), var(--gold));
+}
+.hero-title {
+  font-family: var(--f-disp);
+  font-size: 46px; font-weight: 700; letter-spacing: 5px;
+  line-height: 1; text-transform: uppercase;
+}
+.hero-title em { color: var(--gold-hi); font-style: normal; }
+.hero-sub { font-size: 13px; color: var(--muted); letter-spacing: 2px; margin-top: 4px; text-transform: uppercase; }
+.hero-badges { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.hero-badge {
+  border: 2px solid;
+  padding: 3px 10px;
+  font-family: var(--f-disp); font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.hb-green { border-color: #22dd50; color: #22dd50; background: rgba(34,221,80,.1); }
+.hb-gold  { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); }
+.hb-red   { border-color: var(--red); color: var(--red); background: var(--red-d); }
+.hero-kpis { display: flex; gap: 32px; }
+.hkpi { text-align: center; }
+.hkpi-val { font-family: var(--f-disp); font-size: 52px; color: var(--gold-hi); line-height: 1; font-weight: 700; }
+.hkpi-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 2px; }
+
+/* ─────────────────────────────────────
+   DUEL VISUALIZER
+───────────────────────────────────── */
+.duel-step {
+  display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; margin-bottom: 4px; border: 1.5px solid;
+  font-size: 12px; position: relative;
+}
+.duel-step.won { border-color: rgba(34,221,80,.3); background: rgba(34,221,80,.06); border-left: 3px solid #22dd50; }
+.duel-step.lost { border-color: rgba(255,26,46,.3); background: var(--red-d); border-left: 3px solid var(--red); }
+
+/* ─────────────────────────────────────
+   AUCTION
+───────────────────────────────────── */
+.auction-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 12px; background: var(--ink-2); border: 1.5px solid var(--border);
+  margin-bottom: 6px; transition: border-color .15s;
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+}
+.auction-row:hover { border-color: var(--gold-b); }
+.bid-inp {
+  width: 80px; background: var(--ink-3); border: 2px solid var(--border-2);
+  color: var(--gold-hi); font-family: var(--f-mono); font-size: 14px;
+  text-align: center; padding: 5px 8px; outline: none;
+  transition: border-color .15s;
+}
+.bid-inp:focus { border-color: var(--gold); }
+
+/* ─────────────────────────────────────
+   GAUGE
+───────────────────────────────────── */
+.gauge { background: var(--ink-3); height: 8px; position: relative; overflow: hidden; }
+.gauge-f {
+  height: 100%; transition: width .5s ease;
+  position: relative;
+}
+.gauge-f.ok     { background: linear-gradient(90deg, var(--gold-lo), var(--gold)); }
+.gauge-f.warn   { background: linear-gradient(90deg, #7a3010, #e87020); }
+.gauge-f.danger { background: linear-gradient(90deg, #5a0010, var(--red)); }
+/* Marqueur scanline */
+.gauge-f::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0; width: 3px;
+  background: var(--gold-hi); opacity: .8;
+}
+
+/* ─────────────────────────────────────
+   RESPONSIVE — Mobile First
+───────────────────────────────────── */
+
+/* Tablette */
+@media(max-width:900px) {
+  :root { --sidebar-w: 56px; }
+  .g3,.g4 { grid-template-columns: 1fr 1fr; }
+  .hide-m { display: none; }
+  .hero-kpis { gap: 16px; }
+  .hkpi-val { font-size: 38px; }
+  .hero-title { font-size: 36px; letter-spacing: 3px; }
+}
+
+/* Mobile */
+@media(max-width:600px) {
+  :root { --sidebar-w: 52px; }
+
+  /* Layout */
+  .g2,.g3,.g4 { grid-template-columns: 1fr; }
+  .page { padding: 10px 8px; }
+
+  /* Topbar mobile */
+  .topbar {
+    padding: 0 8px;
+    height: 46px;
+  }
+  .topbar-title { font-size: 13px; letter-spacing: 2px; }
+  .topbar-title-sub { display: none; }
+  .topbar-divider { display: none; }
+  #topbar-page { display: none; }
+  #tb-user-label { max-width: 60px; font-size: 10px; }
+  #tb-auth-btn { font-size: 9px; padding: 4px 7px; }
+  .tb-badge { font-size: 11px; padding: 3px 7px; }
+  .bv { font-size: 13px; }
+
+  /* Sidebar mobile — barre du bas */
+  .sidebar {
+    position: fixed;
+    left: 0; right: 0;
+    top: auto; bottom: 0;
+    width: 100%;
+    height: 58px;
+    flex-direction: row;
+    padding: 0;
+    border-right: none;
+    border-top: 3px solid var(--gold);
+    z-index: 400;
+    clip-path: none;
+  }
+  .sidebar::before { display: none; }
+  .sidebar-logo { display: none; }
+  .sidebar-bottom { display: none; }
+  .nav-items {
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    justify-content: space-around;
+    padding: 0;
+    scrollbar-width: none;
+  }
+  .nav-items::-webkit-scrollbar { display: none; }
+  .nav-item {
+    flex-direction: column;
+    padding: 6px 4px;
+    min-width: 44px;
+    flex-shrink: 0;
+    border-left: none;
+    border-bottom: 3px solid transparent;
+    border-right: none;
+    height: 100%;
+    justify-content: center;
+  }
+  .nav-item.active {
+    border-left: none;
+    border-bottom: 3px solid var(--gold);
+    background: rgba(200,160,32,.1);
+  }
+  .nav-icon { font-size: 18px; margin: 0; }
+  .nav-label { font-size: 8px; letter-spacing: 0.5px; margin-top: 2px; }
+  .nav-badge { top: 6px; right: 4px; }
+
+  /* Main adapté à la barre du bas */
+  .main {
+    margin-left: 0 !important;
+    padding-bottom: 68px; /* espace pour la barre nav */
+  }
+
+  /* Hero */
+  .hero-panel { padding: 14px; }
+  .hero-title { font-size: 24px; letter-spacing: 2px; }
+  .hero-sub { font-size: 10px; letter-spacing: 1px; }
+  .hero-kpis { gap: 10px; flex-wrap: wrap; }
+  .hkpi-val { font-size: 28px; }
+  .hero-panel > div { flex-direction: column; gap: 12px; }
+
+  /* Panels */
+  .panel { padding: 12px; }
+  .chapter-title { font-size: 28px; letter-spacing: 2px; }
+  .chapter-num { font-size: 9px; }
+
+  /* Classement */
+  .rank-row { padding: 8px 10px; gap: 8px; }
+  .rnum { font-size: 18px; width: 22px; }
+  .r-av { width: 26px; height: 26px; font-size: 12px; }
+  .r-name { font-size: 12px; }
+  .r-pts { font-size: 18px; }
+
+  /* Enchères */
+  .enc-row-btns { flex-direction: column; gap: 4px; }
+
+  /* Simulateur */
+  .sim-score { font-size: 48px; }
+
+  /* DB table — masquer colonnes non essentielles */
+  .db-col-club { display: none; }
+  .db-col-evolut { display: none; }
+
+  /* Modal auth */
+  #auth-modal > div {
+    padding: 20px 16px;
+    clip-path: none;
+    border-radius: 0;
+    width: 100%;
+    margin: 0;
+    position: fixed;
+    bottom: 0;
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  /* Ligue — formulaires */
+  .nb-opt { padding: 8px 4px; font-size: 16px; }
+
+  /* Topbar budget — masquer sur très petit */
+  .tb-badge:first-child { display: none; }
+}
+
+/* Très petit (iPhone SE) */
+@media(max-width:375px) {
+  .hero-title { font-size: 20px; }
+  .nav-label { display: none; }
+  .nav-icon { font-size: 20px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<nav class="sidebar">
+  <!-- Logo GTG exact (miniature) -->
+  <div class="sidebar-logo">
+    <svg width="42" height="42" viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="tgS" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%"   stop-color="#ffe080"/>
+          <stop offset="30%"  stop-color="#c8a020"/>
+          <stop offset="70%"  stop-color="#a07818"/>
+          <stop offset="100%" stop-color="#5a3800"/>
+        </linearGradient>
+      </defs>
+      <!-- Diamant double contour -->
+      <polygon points="150,20 248,78 248,202 150,260 52,202 52,78"
+        fill="#0d0d0d" stroke="#c8a020" stroke-width="5"/>
+      <polygon points="150,36 234,86 234,194 150,244 66,194 66,86"
+        fill="none" stroke="#7a5010" stroke-width="2.5" opacity="0.7"/>
+      <!-- G gauche -->
+      <path d="M118,82 L76,82 L76,148 L118,148 L118,122 L98,122 L98,114 L118,114"
+        fill="none" stroke="#c8a020" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter"/>
+      <!-- G droite -->
+      <path d="M182,82 L224,82 L224,148 L182,148 L182,122 L202,122 L202,114 L182,114"
+        fill="none" stroke="#c8a020" stroke-width="6" stroke-linecap="square" stroke-linejoin="miter"/>
+      <!-- T central -->
+      <rect x="136" y="10" width="28" height="258" fill="url(#tgS)"/>
+      <rect x="112" y="10" width="76" height="22"  fill="url(#tgS)"/>
+      <!-- Reflet T -->
+      <rect x="136" y="10" width="6" height="258" fill="rgba(255,240,120,.2)"/>
+    </svg>
+  </div>
+
+  <div class="nav-items">
+    <div class="nav-item active" onclick="goto('dashboard',this)" title="Accueil">
+      <div class="nav-icon">🏠</div><div class="nav-label">HOME</div>
+    </div>
+    <div class="nav-item" onclick="goto('equipe',this)" title="Mon Équipe">
+      <div class="nav-icon">👕</div><div class="nav-label">SQUAD</div>
+    </div>
+    <div class="nav-item" onclick="goto('mercato',this)" title="Mercato">
+      <div class="nav-icon">⚡</div><div class="nav-label">BID</div>
+      <div class="nav-badge"></div>
+    </div>
+    <div class="nav-item" onclick="goto('match',this)" title="Match">
+      <div class="nav-icon">⚽</div><div class="nav-label">MATCH</div>
+    </div>
+    <div class="nav-item" onclick="goto('classement',this)" title="Classement">
+      <div class="nav-icon">🏆</div><div class="nav-label">RANK</div>
+    </div>
+    <div class="nav-item" onclick="goto('joueurs',this)" title="Joueurs TM">
+      <div class="nav-icon">📊</div><div class="nav-label">DB</div>
+    </div>
+    <div class="nav-item" onclick="goto('ligue',this)" title="Ligue">
+      <div class="nav-icon">🔗</div><div class="nav-label">LEAGUE</div>
+    </div>
+    <div class="nav-item" onclick="goto('ai',this)" title="IA Coach">
+      <div class="nav-icon">🤖</div><div class="nav-label">AI</div>
+    </div>
+    <div class="nav-item" id="nav-admin" onclick="gotoAdmin(this)" title="Admin" style="display:none">
+      <div class="nav-icon">⚙️</div><div class="nav-label">ADMIN</div>
+    </div>
+  </div>
+
+  <div class="sidebar-bottom">
+    <div class="player-chip" onclick="toast('Coach Romain · Les Invincibles FC','info')">R</div>
+  </div>
+</nav>
+
+<!-- ═══════ MAIN ═══════ -->
+<div class="main">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <!-- Logo inline topbar -->
+    <svg width="28" height="28" viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
+      <defs><linearGradient id="tgT" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffe080"/><stop offset="100%" stop-color="#5a3800"/></linearGradient></defs>
+      <polygon points="150,20 248,78 248,202 150,260 52,202 52,78" fill="#0d0d0d" stroke="#c8a020" stroke-width="6"/>
+      <polygon points="150,36 234,86 234,194 150,244 66,194 66,86" fill="none" stroke="#7a5010" stroke-width="3" opacity="0.6"/>
+      <path d="M118,82 L76,82 L76,148 L118,148 L118,122 L98,122 L98,114 L118,114" fill="none" stroke="#c8a020" stroke-width="7" stroke-linecap="square"/>
+      <path d="M182,82 L224,82 L224,148 L182,148 L182,122 L202,122 L202,114 L182,114" fill="none" stroke="#c8a020" stroke-width="7" stroke-linecap="square"/>
+      <rect x="136" y="10" width="28" height="258" fill="url(#tgT)"/>
+      <rect x="112" y="10" width="76" height="22"  fill="url(#tgT)"/>
+    </svg>
+
+    <div class="topbar-title">
+      GOLD TO GOAT
+      <span class="topbar-title-sub">FANTASY LIGUE 1</span>
+    </div>
+
+    <div class="topbar-divider"></div>
+    <div style="font-family:var(--f-disp);font-size:11px;letter-spacing:2px;color:var(--muted);" id="topbar-page">DASHBOARD</div>
+
+      <div class="topbar-right">
+        <div class="tb-badge gold-b">💎 <span class="bv" id="budget-display">278.4M€</span></div>
+        <div class="tb-badge"><div class="live-ring"></div> <span id="live-timer" style="font-family:var(--f-mono);font-size:11px;">J32 62:14:22</span></div>
+        <span id="tb-user-label" style="font-family:var(--f-disp);font-size:11px;letter-spacing:1px;color:var(--gold);max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+        <button id="tb-auth-btn" onclick="openAuthModal()" style="background:var(--gold);border:none;color:#000;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;padding:5px 10px;cursor:pointer;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,0 100%);">🔐 CONNEXION</button>
+      </div>
+    </div>
+
+<!-- ══════════════════════════════════
+     DASHBOARD
+══════════════════════════════════ -->
+<div id="page-dashboard" class="page active">
+
+  <div class="hero-panel" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div>
+      <div style="font-family:var(--f-disp);font-size:11px;letter-spacing:4px;color:var(--muted);margin-bottom:6px;">SAISON 2025/26 · LIGUE 1</div>
+      <div class="hero-title" id="dash-team-name">LES <em>INVINCIBLES</em> FC</div>
+      <div class="hero-sub" id="dash-team-sub">Coach Romain · Formation 4-3-3 · Liga des Potes</div>
+      <div class="hero-badges">
+        <span class="hero-badge hb-green">● J31 TERMINÉE</span>
+        <span class="hero-badge hb-gold">J32 DANS 3J</span>
+        <span class="hero-badge hb-red">TOUR 2/3 BID</span>
+      </div>
+    </div>
+    <div class="hero-kpis">
+      <div class="hkpi"><div class="hkpi-val" id="dash-score">3–1</div><div class="hkpi-lbl">Score J31</div></div>
+      <div class="hkpi"><div class="hkpi-val" id="dash-rank" style="color:var(--cyan);">1<sup style="font-size:26px">er</sup></div><div class="hkpi-lbl">Classement</div></div>
+      <div class="hkpi"><div class="hkpi-val" id="dash-budget">278</div><div class="hkpi-lbl">Budget M€</div></div>
+    </div>
+  </div>
+
+  <div class="g4" style="margin-bottom:16px;">
+    <div class="kpi-block"><div class="kpi-val">3–1</div><div class="kpi-label">Confrontation J31</div><div class="kpi-delta delta-up">▲ 2 BUTS RÉELS + 1 GTG</div></div>
+    <div class="kpi-block"><div class="kpi-val">278M€</div><div class="kpi-label">Budget disponible</div><div class="kpi-delta delta-up">▲ +5.2M€ REVENTES</div></div>
+    <div class="kpi-block"><div class="kpi-val">2/3</div><div class="kpi-label">Tour d'enchères</div><div class="kpi-delta delta-eq">FERME DANS 62H</div></div>
+    <div class="kpi-block"><div class="kpi-val">7.4</div><div class="kpi-label">Note moy. équipe</div><div class="kpi-delta delta-up">▲ +0.3 VS J30</div></div>
+  </div>
+
+  <div class="g2">
+    <div class="panel panel-gold cut" style="padding:18px;">
+      <div class="panel-label">CONFRONTATION J31</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <div style="font-family:var(--f-disp);font-size:16px;letter-spacing:2px;color:var(--gold-hi);">LES INVINCIBLES</div>
+        <div style="font-family:var(--f-disp);font-size:52px;letter-spacing:6px;line-height:1;"><span style="color:var(--gold-hi);">3</span><span style="color:var(--muted);font-size:40px;"> – </span><span>1</span></div>
+        <div style="font-family:var(--f-disp);font-size:16px;letter-spacing:2px;">DRAGON FC</div>
+      </div>
+      <div class="g2" style="gap:8px;">
+        <div style="background:var(--ink-3);border:1.5px solid var(--border);padding:8px;text-align:center;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:2px;">⚽ RÉELS</div>
+          <div style="font-family:var(--f-disp);font-size:22px;color:#22dd50;">2 – 0</div>
+        </div>
+        <div style="background:var(--ink-3);border:1.5px solid var(--border);padding:8px;text-align:center;">
+          <div style="font-size:9px;color:var(--muted);margin-bottom:4px;text-transform:uppercase;letter-spacing:2px;">⚡ GTG</div>
+          <div style="font-family:var(--f-disp);font-size:22px;color:#cc88ff;">1 – 1</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;font-size:11px;color:var(--muted);letter-spacing:1px;">🛡️ CATENACCIO · 1 BUT ADVERSE ANNULÉ</div>
+    </div>
+
+    <div class="panel cut" style="padding:18px;">
+      <div class="panel-label">TOP PERFORMEURS J31</div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+        <span style="font-family:var(--f-disp);font-size:18px;color:var(--gold-hi);width:24px;">1</span>
+        <span class="pos pos-ATT">ATT</span>
+        <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:14px;letter-spacing:1px;">Kvaratskhelia</div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;">PSG · 2⚽ 1🎯</div></div>
+        <span style="font-family:var(--f-mono);font-size:18px;font-weight:500;color:#22dd50;">9.2</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+        <span style="font-family:var(--f-disp);font-size:18px;color:var(--muted);width:24px;">2</span>
+        <span class="pos pos-MID">MID</span>
+        <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:14px;letter-spacing:1px;">João Neves</div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;">PSG · 1⚽ 2🎯</div></div>
+        <span style="font-family:var(--f-mono);font-size:18px;font-weight:500;color:#22dd50;">8.5</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+        <span style="font-family:var(--f-disp);font-size:18px;color:var(--muted);width:24px;">3</span>
+        <span class="pos pos-DEF">DEF</span>
+        <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:14px;letter-spacing:1px;">A. Hakimi</div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;">PSG · 0 TIR CONCÉDÉ</div></div>
+        <span style="font-family:var(--f-mono);font-size:18px;font-weight:500;color:var(--gold-hi);">7.5</span>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;padding:8px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+        <span style="font-family:var(--f-disp);font-size:18px;color:var(--muted);width:24px;">4</span>
+        <span class="pos pos-GK">GK</span>
+        <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:14px;letter-spacing:1px;">L. Chevalier</div><div style="font-size:10px;color:var(--muted);letter-spacing:1px;">PSG · 3 ARRÊTS CS</div></div>
+        <span style="font-family:var(--f-mono);font-size:18px;font-weight:500;color:var(--gold-hi);">7.2</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div style="margin-top:14px;" class="panel cut">
+    <div class="panel-label">AVANCEMENT SAISON 2025/26</div>
+    <div class="g3" style="padding:18px 0 0;">
+      <div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--f-disp);font-size:11px;letter-spacing:2px;margin-bottom:6px;"><span style="color:var(--muted);">PHASE ALLER</span><span style="color:var(--gold);">100%</span></div>
+        <div class="prog"><div class="prog-f" style="width:100%"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--f-disp);font-size:11px;letter-spacing:2px;margin-bottom:6px;"><span style="color:var(--muted);">PHASE RETOUR</span><span style="color:var(--gold);">63%</span></div>
+        <div class="prog"><div class="prog-f" style="width:63%"></div></div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--f-disp);font-size:11px;letter-spacing:2px;margin-bottom:6px;"><span style="color:var(--muted);">OBJECTIF PODIUM</span><span style="color:var(--gold);">71%</span></div>
+        <div class="prog"><div class="prog-f" style="width:71%"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     EQUIPE
+══════════════════════════════════ -->
+<div id="page-equipe" class="page">
+  <div class="chapter">
+    <div><div class="chapter-num">SECTION 02</div></div>
+    <div class="chapter-title">MON <em>ÉQUIPE</em></div>
+    <div class="chapter-line"></div>
+    <div class="chapter-actions">
+      <button class="btn btn-outline btn-sm" onclick="openModal('modal-form')">⚙ FORMATION</button>
+      <button class="btn btn-gold btn-sm" onclick="toast('COMPOSITION VALIDÉE J32','success')">VALIDER J32</button>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="panel cut" style="padding:12px;">
+      <div class="panel-label">TERRAIN · 4-3-3 · <span style="color:var(--gold)">DOM. J32</span></div>
+      <div class="pitch">
+        <div class="pitch-row">
+          <div class="pslot" onclick="toast('Kvaratskhelia · Note 9.2','info')">
+            <div class="pslot-av ATT">KV<div class="pslot-score">9.2</div></div>
+            <div class="pslot-name">Kvaratskhelia</div><div class="pslot-club">PSG</div>
+          </div>
+          <div class="pslot" onclick="toast('O. Dembélé · Note 8.8','info')">
+            <div class="pslot-av ATT">OD<div class="pslot-score">8.8</div></div>
+            <div class="pslot-name">Dembélé</div><div class="pslot-club">PSG</div>
+          </div>
+          <div class="pslot" onclick="toast('B. Barcola · Note 7.5','info')">
+            <div class="pslot-av ATT">BB<div class="pslot-score">7.5</div></div>
+            <div class="pslot-name">Barcola</div><div class="pslot-club">PSG</div>
+          </div>
+        </div>
+        <div class="pitch-row" style="margin-top:18px;">
+          <div class="pslot" onclick="toast('Vitinha · Note 8.2','info')">
+            <div class="pslot-av MID">VI<div class="pslot-score">8.2</div></div>
+            <div class="pslot-name">Vitinha</div><div class="pslot-club">PSG</div>
+          </div>
+          <div class="pslot" onclick="toast('João Neves · Note 8.5','info')">
+            <div class="pslot-av MID">JN<div class="pslot-score">8.5</div></div>
+            <div class="pslot-name">João Neves</div><div class="pslot-club">PSG</div>
+          </div>
+          <div class="pslot" onclick="toast('Zaïre-Emery · Note 7.0','info')">
+            <div class="pslot-av MID">ZE<div class="pslot-score med">7.0</div></div>
+            <div class="pslot-name">Zaïre-Emery</div><div class="pslot-club">PSG</div>
+          </div>
+        </div>
+        <div class="pitch-row" style="margin-top:18px;">
+          <div class="pslot" onclick="toast('Hakimi · Note 7.5','info')">
+            <div class="pslot-av DEF">HA<div class="pslot-score">7.5</div></div>
+            <div class="pslot-name">Hakimi</div><div class="pslot-club">PSG</div>
+          </div>
+          <div class="pslot" onclick="toast('Zabarnyi · Note 7.2','info')">
+            <div class="pslot-av DEF">ZA<div class="pslot-score med">7.2</div></div>
+            <div class="pslot-name">Zabarnyi</div><div class="pslot-club">PSG</div>
+          </div>
+          <div class="pslot" onclick="toast('Pacho · Note 7.0','info')">
+            <div class="pslot-av DEF">PA<div class="pslot-score med">7.0</div></div>
+            <div class="pslot-name">Pacho</div><div class="pslot-club">PSG</div>
+          </div>
+          <div class="pslot" onclick="toast('N. Mendes · Note 7.8','info')">
+            <div class="pslot-av DEF">NM<div class="pslot-score">7.8</div></div>
+            <div class="pslot-name">N. Mendes</div><div class="pslot-club">PSG</div>
+          </div>
+        </div>
+        <div class="pitch-row" style="margin-top:18px;">
+          <div class="pslot" onclick="toast('L. Chevalier · Note 7.2','info')">
+            <div class="pslot-av GK">LC<div class="pslot-score med">7.2</div></div>
+            <div class="pslot-name">Chevalier</div>
+            <div class="pslot-club">PSG</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="gcol">
+      <div class="panel cut" style="padding:16px;">
+        <div class="panel-label">REMPLAÇANTS (6 SLOTS)</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+          <span class="pos pos-GK">GK</span>
+          <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">M. Safonov</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">PSG</div></div>
+          <span style="font-family:var(--f-mono);font-size:14px;color:var(--gold-hi);">6.5</span>
+          <button class="btn btn-outline btn-xs" onclick="toast('M. Safonov MIS TITULAIRE','success')">↑</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+          <span class="pos pos-DEF">DEF</span>
+          <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">Beraldo</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">PSG</div></div>
+          <span style="font-family:var(--f-mono);font-size:14px;color:var(--gold-hi);">6.8</span>
+          <button class="btn btn-outline btn-xs" onclick="toast('Beraldo MIS TITULAIRE','success')">↑</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+          <span class="pos pos-MID">MID</span>
+          <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">Fabián Ruiz</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">PSG</div></div>
+          <span style="font-family:var(--f-mono);font-size:14px;color:var(--gold-hi);">6.5</span>
+          <button class="btn btn-outline btn-xs" onclick="toast('Fabián Ruiz MIS TITULAIRE','success')">↑</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+          <span class="pos pos-ATT">ATT</span>
+          <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">B. Barcola</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">PSG</div></div>
+          <span style="font-family:var(--f-mono);font-size:14px;color:#22dd50;">7.0</span>
+          <button class="btn btn-outline btn-xs" onclick="toast('B. Barcola MIS TITULAIRE','success')">↑</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+          <span class="pos pos-MID">MID</span>
+          <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">Lee Kang-In</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">PSG</div></div>
+          <span style="font-family:var(--f-mono);font-size:14px;color:var(--red);">6.2</span>
+          <button class="btn btn-outline btn-xs" onclick="toast('Lee Kang-In MIS TITULAIRE','success')">↑</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;padding:7px 10px;background:var(--ink-3);border:1.5px solid var(--border);margin-bottom:5px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+          <span class="pos pos-ATT">ATT</span>
+          <div style="flex:1;"><div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">G. Ramos</div><div style="font-size:9px;color:var(--muted);letter-spacing:1px;">PSG</div></div>
+          <span style="font-family:var(--f-mono);font-size:14px;color:var(--gold-hi);">6.8</span>
+          <button class="btn btn-outline btn-xs" onclick="toast('G. Ramos MIS TITULAIRE','success')">↑</button>
+        </div>
+      </div>
+      <div class="panel cut" style="padding:16px;">
+        <div class="panel-label">STATS EFFECTIF</div>
+        <div class="g2" style="gap:8px;">
+          <div style="background:var(--ink-3);border:1.5px solid var(--border);padding:12px;text-align:center;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);">
+            <div style="font-family:var(--f-disp);font-size:28px;color:var(--gold-hi);line-height:1;">14</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:2px;">JOUEURS</div>
+          </div>
+          <div style="background:var(--ink-3);border:1.5px solid var(--border);padding:12px;text-align:center;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);">
+            <div style="font-family:var(--f-disp);font-size:28px;color:var(--gold-hi);line-height:1;">7.4</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:2px;">NOTE MOY.</div>
+          </div>
+          <div style="background:var(--ink-3);border:1.5px solid var(--border);padding:12px;text-align:center;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);">
+            <div style="font-family:var(--f-disp);font-size:28px;color:var(--gold-hi);line-height:1;">4/4</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:2px;">LIGNES</div>
+          </div>
+          <div style="background:var(--ink-3);border:1.5px solid var(--border);padding:12px;text-align:center;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);">
+            <div style="font-family:var(--f-disp);font-size:28px;color:var(--gold-hi);line-height:1;">+3</div>
+            <div style="font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:2px;">BUTS J31</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     CLASSEMENT
+══════════════════════════════════ -->
+<div id="page-classement" class="page">
+  <div class="chapter">
+    <div><div class="chapter-num">SECTION 05</div></div>
+    <div class="chapter-title"><em>CLASSEMENT</em></div>
+    <div class="chapter-line"></div>
+  </div>
+  <div class="itabs">
+    <button class="itab active" onclick="switchTab('cl-gen','cl-j',this)">GÉNÉRAL</button>
+    <button class="itab" onclick="switchTab('cl-j','cl-gen',this)">JOURNÉE 31</button>
+  </div>
+  <div class="g2">
+    <div id="cl-gen">
+      <div class="rank-row me">
+        <div class="rnum r1">1</div><div class="r-av">L</div>
+        <div class="r-info"><div class="r-name">LES INVINCIBLES <span style="color:var(--cyan);font-size:10px;">[VOUS]</span></div><div class="r-coach">COACH ROMAIN</div></div>
+        <div class="r-pts">187<span> PTS</span></div><span style="font-size:18px;margin-left:8px;">👑</span>
+      </div>
+      <div class="rank-row">
+        <div class="rnum r2">2</div><div class="r-av">D</div>
+        <div class="r-info"><div class="r-name">DRAGON FC</div><div class="r-coach">COACH THOMAS</div></div>
+        <div class="r-pts">175<span> PTS</span></div><span style="font-size:18px;margin-left:8px;">🥈</span>
+      </div>
+      <div class="rank-row">
+        <div class="rnum r3">3</div><div class="r-av">D</div>
+        <div class="r-info"><div class="r-name">DREAM TEAM XI</div><div class="r-coach">COACH SARAH</div></div>
+        <div class="r-pts">168<span> PTS</span></div><span style="font-size:18px;margin-left:8px;">🥉</span>
+      </div>
+      <div class="rank-row">
+        <div class="rnum">4</div><div class="r-av">K</div>
+        <div class="r-info"><div class="r-name">KEV'S UNITED</div><div class="r-coach">COACH KEVIN</div></div>
+        <div class="r-pts">162<span> PTS</span></div>
+      </div>
+      <div class="rank-row">
+        <div class="rnum">5</div><div class="r-av">M</div>
+        <div class="r-info"><div class="r-name">MADAME FC</div><div class="r-coach">COACH JULIE</div></div>
+        <div class="r-pts">154<span> PTS</span></div>
+      </div>
+      <div class="rank-row">
+        <div class="rnum">6</div><div class="r-av">M</div>
+        <div class="r-info"><div class="r-name">MST XI</div><div class="r-coach">COACH MARC</div></div>
+        <div class="r-pts">149<span> PTS</span></div>
+      </div>
+      <div class="rank-row">
+        <div class="rnum">7</div><div class="r-av">W</div>
+        <div class="r-info"><div class="r-name">WARRIORS SC</div><div class="r-coach">COACH LAMINE</div></div>
+        <div class="r-pts">143<span> PTS</span></div>
+      </div>
+      <div class="rank-row">
+        <div class="rnum">8</div><div class="r-av">R</div>
+        <div class="r-info"><div class="r-name">RIBÉRY LÉGEND</div><div class="r-coach">COACH BAPTISTE</div></div>
+        <div class="r-pts">137<span> PTS</span></div>
+      </div>
+    </div>
+    <div class="gcol">
+      <div class="panel panel-gold cut" style="padding:18px;">
+        <div class="panel-label">TA POSITION</div>
+        <div style="text-align:center;padding:14px 0;">
+          <div style="font-family:var(--f-disp);font-size:80px;color:var(--gold-hi);line-height:1;">1<sup style="font-size:36px">ER</sup></div>
+          <div style="font-size:11px;color:var(--muted);letter-spacing:2px;margin-top:4px;">SUR 8 ÉQUIPES</div>
+          <div style="margin-top:14px;display:flex;justify-content:center;gap:24px;">
+            <div style="text-align:center;"><div style="font-family:var(--f-disp);font-size:24px;color:var(--cyan);">+12</div><div style="font-size:9px;color:var(--muted);letter-spacing:2px;">PTS AVANCE</div></div>
+            <div style="text-align:center;"><div style="font-family:var(--f-disp);font-size:24px;color:var(--gold-hi);">187</div><div style="font-size:9px;color:var(--muted);letter-spacing:2px;">PTS TOTAL</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="cl-j" style="display:none;"></div>
+</div>
+
+<!-- AUTRES PAGES (placeholder) -->
+<!-- ══════════════════════════════════
+     MERCATO / ENCHÈRES
+══════════════════════════════════ -->
+<div id="page-mercato" class="page">
+  <div class="chapter">
+    <div><div class="chapter-num">SECTION 03</div></div>
+    <div class="chapter-title">MERCATO <em>ENCHÈRES</em></div>
+    <div class="chapter-line"></div>
+    <div class="chapter-actions">
+      <span style="font-size:12px;color:var(--muted)">Tour <strong style="color:var(--gold)">2/3</strong> · Engagé : <strong style="color:var(--red)" id="enc-engaged">0M€</strong></span>
+      <button class="btn btn-gold btn-sm" onclick="submitBids()">⚡ SOUMETTRE</button>
+    </div>
+  </div>
+
+  <!-- Budget -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+    <div class="panel panel-gold cut" style="padding:16px;">
+      <div class="panel-label">RÈGLES ENCHÈRES CACHÉES</div>
+      <div style="font-size:12px;color:var(--text);line-height:2.2;">
+        • Budget initial : <strong style="color:var(--gold-hi)">350M€</strong> · <strong>3 tours</strong><br>
+        • Enchères <strong>invisibles</strong> aux adversaires<br>
+        • Égalité → <strong>1er enchérisseur</strong> gagne<br>
+        • Salaire = <strong>20%</strong> du prix d'achat
+      </div>
+    </div>
+    <div class="panel cut" style="padding:16px;">
+      <div class="panel-label">BUDGET TOUR 2</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:var(--ink-3);border:1px solid var(--border);padding:10px;text-align:center;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%)">
+          <div style="font-family:var(--f-disp);font-size:24px;color:var(--gold-hi)" id="enc-budget-disp">278M€</div>
+          <div style="font-size:9px;color:var(--muted);letter-spacing:1px">DISPONIBLE</div>
+        </div>
+        <div style="background:var(--ink-3);border:1px solid var(--border);padding:10px;text-align:center;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%)">
+          <div style="font-family:var(--f-disp);font-size:24px;color:var(--red)" id="enc-panier-disp">0M€</div>
+          <div style="font-size:9px;color:var(--muted);letter-spacing:1px">PANIER</div>
+        </div>
+      </div>
+      <div class="prog"><div class="prog-f" id="enc-budget-bar" style="width:79%"></div></div>
+    </div>
+  </div>
+
+  <!-- Joueurs disponibles -->
+  <div class="panel cut" style="padding:16px;">
+    <div class="panel-label">JOUEURS DISPONIBLES · ENCHÈRES CACHÉES</div>
+    <!-- Filtres -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+      <input id="enc-search" style="flex:1;min-width:160px;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:13px;padding:7px 10px;outline:none;" placeholder="🔍 Rechercher..." oninput="renderEnchere()">
+      <select id="enc-pos" style="background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;letter-spacing:1px;padding:7px 10px;outline:none;cursor:pointer;" onchange="renderEnchere()">
+        <option value="ALL">TOUS</option>
+        <option value="GK">GK</option>
+        <option value="DEF">DEF</option>
+        <option value="MID">MID</option>
+        <option value="ATT">ATT</option>
+      </select>
+    </div>
+    <div id="enc-list"></div>
+  </div>
+
+  <!-- Panier -->
+  <div class="panel cut" style="padding:16px;margin-top:14px;" id="enc-panier-panel" style="display:none">
+    <div class="panel-label">MON PANIER</div>
+    <div id="enc-panier-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SIMULATEUR GTG
+══════════════════════════════════ -->
+<div id="page-match" class="page">
+  <div class="chapter">
+    <div><div class="chapter-num">SECTION 04</div></div>
+    <div class="chapter-title">SIMULATEUR <em>GTG</em></div>
+    <div class="chapter-line"></div>
+    <div class="chapter-actions">
+      <button class="btn btn-outline btn-sm" id="sim-play-btn" onclick="toggleSim()">▶ LANCER</button>
+      <button class="btn btn-outline btn-sm" onclick="stepSim()">⏭ +1 MIN</button>
+      <div style="display:flex;gap:3px;">
+        <button class="btn btn-outline btn-sm" onclick="setSimSpeed(1,this)">×1</button>
+        <button class="btn btn-outline btn-sm" onclick="setSimSpeed(5,this)">×5</button>
+        <button class="btn btn-gold btn-sm" onclick="setSimSpeed(10,this)">×10</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Score -->
+  <div class="panel panel-gold cut" style="padding:18px 24px;margin-bottom:14px;position:relative;">
+    <div id="sim-status-banner" style="display:none;text-align:center;font-size:12px;color:var(--muted);padding:8px;margin-bottom:8px;background:var(--ink-3);border:1px solid var(--border);"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div style="font-family:var(--f-disp);font-size:18px;letter-spacing:2px;color:var(--gold-hi)" id="sim-home-name">LES INVINCIBLES</div>
+      <div style="font-family:var(--f-disp);font-size:64px;letter-spacing:8px;line-height:1;display:flex;align-items:center;gap:4px;">
+        <span style="color:var(--gold-hi)" id="sim-sh">0</span>
+        <span style="color:var(--muted);font-size:48px">–</span>
+        <span id="sim-sa">0</span>
+      </div>
+      <div style="font-family:var(--f-disp);font-size:18px;letter-spacing:2px;" id="sim-away-name">DRAGON FC</div>
+    </div>
+    <div style="text-align:center;font-family:var(--f-mono);font-size:10px;color:var(--muted);margin-bottom:6px;" id="sim-journee-label"></div>
+    <div style="display:flex;justify-content:center;gap:14px;margin-bottom:10px;">
+      <div style="background:var(--ink-3);border:1px solid var(--border);padding:3px 12px;font-size:11px;">⚽ Réels : <strong id="sim-real">0–0</strong></div>
+      <div style="background:var(--ink-3);border:1px solid var(--border);padding:3px 12px;font-size:11px;">⚡ GTG : <strong id="sim-gtg">0–0</strong></div>
+    </div>
+    <div class="prog" style="height:6px;"><div class="prog-f" id="sim-bar" style="width:0%"></div></div>
+    <div style="text-align:center;font-family:var(--f-mono);font-size:11px;color:var(--muted);margin-top:4px;" id="sim-min">Coup d'envoi imminent…</div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:14px;">
+    <div class="panel cut" style="padding:14px;height:380px;display:flex;flex-direction:column;">
+      <div class="panel-label">FIL DU MATCH</div>
+      <div id="sim-feed" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding-right:4px;"></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel cut" style="padding:14px;">
+        <div class="panel-label">DERNIER DUEL</div>
+        <div id="sim-duel" style="font-size:12px;color:var(--muted);padding:8px;">En attente…</div>
+      </div>
+      <div class="panel cut" style="padding:14px;">
+        <div class="panel-label">STATS</div>
+        <div id="sim-stats"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     BASE JOUEURS TRANSFERMARKT
+══════════════════════════════════ -->
+<div id="page-joueurs" class="page">
+  <div class="chapter">
+    <div><div class="chapter-num">SECTION 06</div></div>
+    <div class="chapter-title">BASE <em>TRANSFERMARKT</em></div>
+    <div class="chapter-line"></div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <input id="db-search" style="flex:1;min-width:180px;background:var(--ink-2);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:13px;padding:8px 12px;outline:none;" placeholder="🔍 Nom, club..." oninput="renderDB()">
+    <select id="db-pos" style="background:var(--ink-2);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;letter-spacing:1px;padding:8px 12px;outline:none;cursor:pointer;" onchange="renderDB()">
+      <option value="ALL">TOUS POSTES</option>
+      <option value="GK">GARDIEN</option>
+      <option value="DEF">DÉFENSEUR</option>
+      <option value="MID">MILIEU</option>
+      <option value="ATT">ATTAQUANT</option>
+    </select>
+    <select id="db-sort" style="background:var(--ink-2);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;letter-spacing:1px;padding:8px 12px;outline:none;cursor:pointer;" onchange="renderDB()">
+      <option value="cote_d">COTE TM ↓</option>
+      <option value="cote_a">COTE TM ↑</option>
+      <option value="name">NOM A→Z</option>
+    </select>
+  </div>
+  <div style="background:var(--ink-2);border:1px solid var(--border);overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;">
+      <thead>
+        <tr>
+          <th style="padding:9px 12px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);border-bottom:2px solid var(--gold);background:var(--ink-3);">#</th>
+          <th style="padding:9px 12px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);border-bottom:2px solid var(--gold);background:var(--ink-3);">JOUEUR</th>
+          <th style="padding:9px 12px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);border-bottom:2px solid var(--gold);background:var(--ink-3);">POSTE</th>
+          <th style="padding:9px 12px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);border-bottom:2px solid var(--gold);background:var(--ink-3);">CLUB</th>
+          <th style="padding:9px 12px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);border-bottom:2px solid var(--gold);background:var(--ink-3);">COTE TM</th>
+          <th style="padding:9px 12px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);border-bottom:2px solid var(--gold);background:var(--ink-3);">ÉVOL.</th>
+          <th style="padding:9px 12px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);border-bottom:2px solid var(--gold);background:var(--ink-3);"></th>
+        </tr>
+      </thead>
+      <tbody id="db-tbody"></tbody>
+    </table>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;padding:12px;" id="db-pag"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     SYSTÈME LIGUE
+══════════════════════════════════ -->
+<div id="page-ligue" class="page">
+  <div class="chapter">
+    <div><div class="chapter-num">SECTION 07</div></div>
+    <div class="chapter-title">SYSTÈME <em>LIGUE</em></div>
+    <div class="chapter-line"></div>
+    <div class="chapter-actions">
+      <button class="btn btn-outline btn-sm" onclick="showLigueScreen('mpg')">📸 IMPORTER MPG</button>
+      <button class="btn btn-outline btn-sm" onclick="showLigueScreen('join')">🔗 REJOINDRE</button>
+      <button class="btn btn-gold btn-sm" onclick="showLigueScreen('create')">+ CRÉER</button>
+    </div>
+  </div>
+
+  <!-- Écran liste -->
+  <div id="ligue-home">
+    <div class="panel cut" style="padding:16px;margin-bottom:14px;">
+      <div class="panel-label">MES LIGUES ACTIVES</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="ligue-list">
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--ink-3);border:1.5px solid var(--gold-b);cursor:pointer;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);">
+          <div style="width:40px;height:40px;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--f-disp);font-size:18px;color:var(--gold-hi);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);">⚽</div>
+          <div style="flex:1;">
+            <div style="font-family:var(--f-disp);font-size:16px;letter-spacing:2px;">LIGA DES POTES</div>
+            <div style="font-size:10px;color:var(--muted);">8 équipes · Mode Amical · 👑 Président</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:var(--f-disp);font-size:24px;color:var(--gold-hi);">1<sup style="font-size:12px">er</sup></div>
+            <div style="font-size:9px;color:var(--muted);">187 pts</div>
+          </div>
+          <span style="background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--green);font-family:var(--f-disp);font-size:9px;letter-spacing:1px;padding:2px 8px;">EN COURS</span>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <div class="panel cut" style="padding:16px;">
+        <div class="panel-label">ACTIVITÉ RÉCENTE</div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;gap:8px;font-size:12px;padding:7px;background:var(--ink-3);border:1px solid var(--border);">⚡ <div><div style="font-weight:700">Tour 2 enchères ouvert</div><div style="font-size:10px;color:var(--muted)">Il y a 2h</div></div></div>
+          <div style="display:flex;gap:8px;font-size:12px;padding:7px;background:var(--ink-3);border:1px solid var(--border);">🏆 <div><div style="font-weight:700">Victoire 3-1 vs Dragon FC</div><div style="font-size:10px;color:var(--muted)">Hier</div></div></div>
+          <div style="display:flex;gap:8px;font-size:12px;padding:7px;background:var(--ink-3);border:1px solid var(--border);">🔗 <div><div style="font-weight:700">Baptiste R. a rejoint la ligue</div><div style="font-size:10px;color:var(--muted)">Il y a 4j</div></div></div>
+        </div>
+      </div>
+      <div class="panel cut" style="padding:16px;">
+        <div class="panel-label">CODE D'INVITATION</div>
+        <div style="background:var(--ink-3);border:1.5px solid var(--gold-b);padding:16px;text-align:center;cursor:pointer;margin-bottom:10px;" onclick="copyCode('GTG-4X8K2')">
+          <div style="font-family:var(--f-mono);font-size:36px;letter-spacing:8px;color:var(--gold-hi);">GTG-4X8K2</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">Cliquer pour copier</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-outline btn-sm" style="flex:1" onclick="shareWhatsApp('GTG-4X8K2')">📱 WHATSAPP</button>
+          <button class="btn btn-outline btn-sm" style="flex:1" onclick="copyCode('GTG-4X8K2')">🔗 COPIER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Écran créer ligue -->
+  <div id="ligue-create" style="display:none;">
+    <div class="panel panel-gold cut" style="padding:20px;max-width:600px;margin:0 auto;">
+      <div class="panel-label">CRÉER UNE NOUVELLE LIGUE</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">NOM DE LA LIGUE</div>
+          <input id="new-ligue-nom" style="width:100%;background:var(--ink-3);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:14px;padding:9px 12px;outline:none;" placeholder="Ex: Liga des Potes">
+        </div>
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;">NOMBRE DE PARTICIPANTS</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;">
+            <div class="nb-opt" onclick="selectNb(4,this)" style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:10px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:20px;transition:all .15s;">4</div>
+            <div class="nb-opt" onclick="selectNb(6,this)" style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:10px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:20px;transition:all .15s;">6</div>
+            <div class="nb-opt" onclick="selectNb(8,this)" style="background:var(--gold-dim);border:2px solid var(--gold);color:var(--gold-hi);padding:10px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:20px;transition:all .15s;">8</div>
+            <div class="nb-opt" onclick="selectNb(10,this)" style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:10px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:20px;transition:all .15s;">10</div>
+            <div class="nb-opt" onclick="selectNb(12,this)" style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:10px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:20px;transition:all .15s;">12</div>
+          </div>
+        </div>
+        <div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:12px;color:var(--text);padding:8px 0;">
+            <input type="checkbox" id="new-ligue-mpg-mode" onchange="toggleMpgBudgetSetup(this.checked)">
+            📋 Reprendre les effectifs MPG (budget restant différent par équipe)
+          </label>
+          <div id="mpg-budget-setup" style="display:none;margin-top:6px;">
+            <div style="font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.6;">
+              Renseigne le nom de chaque équipe MPG (le coach concerné la choisira en rejoignant) et son budget restant actuel.
+            </div>
+            <div id="mpg-budget-rows" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="btn btn-outline btn-sm" onclick="showLigueScreen('home')">ANNULER</button>
+          <button class="btn btn-gold" onclick="createLigue()" style="flex:1">⚡ CRÉER LA LIGUE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Écran rejoindre -->
+  <div id="ligue-join" style="display:none;">
+    <div class="panel cut" style="padding:20px;max-width:500px;margin:0 auto;">
+      <div class="panel-label">REJOINDRE UNE LIGUE</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input id="join-code-input" style="flex:1;background:var(--ink-3);border:2px solid var(--border-2);color:var(--gold-hi);font-family:var(--f-mono);font-size:22px;letter-spacing:4px;text-align:center;padding:10px;outline:none;text-transform:uppercase;" placeholder="GTG-XXXXX" maxlength="9">
+        <button class="btn btn-gold" onclick="lookupLigue()">CHERCHER</button>
+      </div>
+      <div id="join-result" style="margin-bottom:12px;"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="showLigueScreen('home')">ANNULER</button>
+        <button class="btn btn-gold btn-sm" id="btn-join-confirm" onclick="joinLigue()" style="flex:1;display:none">✅ REJOINDRE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Écran : choisir son équipe MPG parmi celles prédéfinies par l'admin -->
+  <div id="ligue-claim" style="display:none;">
+    <div class="panel cut" style="padding:20px;max-width:500px;margin:0 auto;">
+      <div class="panel-label">CHOISIS TON ÉQUIPE</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;" id="mpg-claim-league-label"></div>
+      <div id="mpg-claim-list" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <div style="margin-top:14px;">
+        <button class="btn btn-outline btn-sm" onclick="showLigueScreen('home')">FERMER</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Écran import MPG -->
+  <div id="ligue-mpg" style="display:none;">
+    <div class="panel cut" style="padding:20px;max-width:720px;margin:0 auto;">
+      <div class="panel-label">IMPORTER MON ÉQUIPE MPG</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
+        Envoie une capture d'écran de ton effectif MPG. Claude va l'analyser et te proposer une liste de joueurs
+        à <strong>valider un par un</strong> avant l'ajout définitif à ton équipe.
+      </div>
+
+      <div id="mpg-step-upload">
+        <label for="mpg-file-input" style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:32px;background:var(--ink-3);border:2px dashed var(--border-2);cursor:pointer;text-align:center;">
+          <span style="font-size:28px;">📸</span>
+          <span style="font-family:var(--f-disp);font-size:12px;letter-spacing:1px;color:var(--muted);">CLIQUE POUR CHOISIR UNE CAPTURE (PNG / JPEG)</span>
+        </label>
+        <input id="mpg-file-input" type="file" accept="image/png,image/jpeg,image/webp" style="display:none;" onchange="onMpgFileSelected(this)">
+        <div id="mpg-preview" style="margin-top:12px;display:none;text-align:center;">
+          <img id="mpg-preview-img" style="max-width:100%;max-height:280px;border:1.5px solid var(--border);">
+          <div style="margin-top:12px;">
+            <button class="btn btn-gold" onclick="analyzeMpgScreenshot()">⚡ ANALYSER LA CAPTURE</button>
+            <button class="btn btn-outline btn-sm" onclick="resetMpgImport()">✕ ANNULER</button>
+          </div>
+        </div>
+        <div id="mpg-loading" style="display:none;text-align:center;padding:20px;color:var(--muted);font-size:12px;">
+          ⏳ Claude analyse la capture…
+        </div>
+        <div id="mpg-error" style="display:none;margin-top:12px;padding:10px 12px;background:rgba(255,26,46,.08);border:1px solid rgba(255,26,46,.3);color:var(--red);font-size:12px;"></div>
+      </div>
+
+      <div id="mpg-step-validate" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <div style="font-size:12px;color:var(--muted);">
+            <span id="mpg-count">0</span> joueurs détectés · Budget engagé : <strong style="color:var(--gold-hi)" id="mpg-total">0M€</strong>
+          </div>
+          <button class="btn btn-outline btn-sm" onclick="resetMpgImport()">↺ RECOMMENCER</button>
+        </div>
+        <div id="mpg-rows" style="display:flex;flex-direction:column;gap:6px;max-height:420px;overflow-y:auto;"></div>
+        <div style="display:flex;gap:8px;margin-top:14px;">
+          <button class="btn btn-outline btn-sm" onclick="showLigueScreen('home')">ANNULER</button>
+          <button class="btn btn-gold" style="flex:1" onclick="confirmMpgImport()">✅ VALIDER L'IMPORT</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════
+     IA COACH
+══════════════════════════════════ -->
+<div id="page-ai" class="page">
+  <div class="chapter">
+    <div><div class="chapter-num">SECTION 08</div></div>
+    <div class="chapter-title">IA <em>COACH</em></div>
+    <div class="chapter-line"></div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 300px;gap:14px;">
+    <div class="panel cut" style="padding:16px;display:flex;flex-direction:column;height:560px;">
+      <div class="panel-label">CHAT AVEC L'IA · PROPULSÉ PAR CLAUDE</div>
+      <div id="ai-chat" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;margin-bottom:10px;"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;">
+        <button class="btn btn-outline btn-sm" onclick="askAI('Qui dois-je recruter au Tour 2 ?')">🎯 Recruter</button>
+        <button class="btn btn-outline btn-sm" onclick="askAI('Analyse mon équipe')">📊 Analyser</button>
+        <button class="btn btn-outline btn-sm" onclick="askAI('Comment fonctionne le catenaccio GTG ?')">🛡️ Catenaccio</button>
+        <button class="btn btn-outline btn-sm" onclick="askAI('Comment gérer mon budget mid-saison ?')">💰 Budget</button>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <textarea id="ai-input" style="flex:1;background:var(--ink-3);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:13px;padding:9px 12px;outline:none;resize:none;rows:1;" placeholder="Pose ta question au Coach IA..." rows="2" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendAI()}"></textarea>
+        <button class="btn btn-gold" onclick="sendAI()">▶</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;">
+      <div class="panel panel-gold cut" style="padding:14px;">
+        <div class="panel-label">RECOMMANDATIONS AUTO</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="background:var(--ink-3);border:1px solid var(--border);padding:10px;font-size:12px;cursor:pointer;" onclick="askAI('Dis-moi plus sur le recrutement Tour 2')">
+            <div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;margin-bottom:4px;">🎯 RECRUTER TOUR 2</div>
+            <div style="color:var(--muted);">Budget 278M€ · Priorité ATT · Akliouche 45M€</div>
+          </div>
+          <div style="background:var(--ink-3);border:1px solid var(--border);padding:10px;font-size:12px;cursor:pointer;" onclick="askAI('Explique-moi comment activer le catenaccio')">
+            <div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;margin-bottom:4px;">🛡️ CATENACCIO ACTIF</div>
+            <div style="color:var(--muted);">Moy. DEF 7.3 → annule 1 but adverse</div>
+          </div>
+          <div style="background:var(--ink-3);border:1px solid var(--border);padding:10px;font-size:12px;cursor:pointer;" onclick="askAI('Comment optimiser mon budget pour la mi-saison ?')">
+            <div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;margin-bottom:4px;">💰 GARDER 80M€</div>
+            <div style="color:var(--muted);">Réserve pour mercato mi-saison</div>
+          </div>
+        </div>
+      </div>
+      <div class="panel cut" style="padding:14px;">
+        <div class="panel-label">ANALYSE 4-3-3</div>
+        <div style="font-size:12px;color:var(--text);line-height:2;">
+          ✅ 3 ATT → fort potentiel GTG<br>
+          ✅ DEF à 4 → catenaccio possible<br>
+          ⚠️ MID à 3 → surveiller moy. > 7.5<br>
+          💡 Kvarats (9.2) quasi inébranlable
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE ADMIN ══════════════════════════════════ -->
+<div id="page-admin" class="page" style="display:none">
+  <div class="chapter">
+    <div><div class="chapter-num">ADMIN</div></div>
+    <div class="chapter-title">GESTION <em>JOUEURS</em></div>
+    <div class="chapter-line"></div>
+  </div>
+
+  <!-- Filtres -->
+  <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+    <input id="admin-search" placeholder="🔍 Nom, club..." style="flex:1;min-width:160px;background:var(--ink-2);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:13px;padding:8px 12px;outline:none;" oninput="renderAdminPlayers()">
+    <select id="admin-club" style="background:var(--ink-2);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;padding:8px 12px;outline:none;" onchange="renderAdminPlayers()">
+      <option value="">TOUS LES CLUBS</option>
+      <option>PSG</option><option>OM</option><option>Monaco</option>
+      <option>LOSC</option><option>OL</option><option>Lens</option>
+      <option>Rennes</option><option>Nice</option><option>Strasbourg</option>
+      <option>Toulouse</option><option>Brest</option><option>Lorient</option>
+      <option>Angers</option><option>Paris FC</option><option>Le Havre</option>
+      <option>Auxerre</option><option>Nantes</option><option>Metz</option>
+    </select>
+    <select id="admin-pos" style="background:var(--ink-2);border:1.5px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;padding:8px 12px;outline:none;" onchange="renderAdminPlayers()">
+      <option value="">TOUS POSTES</option>
+      <option>GK</option><option>DEF</option><option>MID</option><option>ATT</option>
+    </select>
+    <button class="btn btn-gold btn-sm" onclick="openAddPlayer()">+ AJOUTER</button>
+  </div>
+
+  <!-- Tableau joueurs -->
+  <div style="background:var(--ink-2);border:1px solid var(--border);overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;" id="admin-table">
+      <thead>
+        <tr style="background:var(--ink-3);border-bottom:2px solid var(--gold);">
+          <th style="padding:8px 12px;text-align:left;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);">JOUEUR</th>
+          <th style="padding:8px 12px;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);">CLUB</th>
+          <th style="padding:8px 12px;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);">POSTE</th>
+          <th style="padding:8px 12px;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);">COTE TM</th>
+          <th style="padding:8px 12px;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);">NOTE</th>
+          <th style="padding:8px 12px;font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);"></th>
+        </tr>
+      </thead>
+      <tbody id="admin-tbody"></tbody>
+    </table>
+    <div style="padding:10px;font-size:12px;color:var(--muted);text-align:right;" id="admin-count"></div>
+  </div>
+
+  <!-- Modal ajout/édition joueur -->
+  <div id="admin-modal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.9);align-items:center;justify-content:center;">
+    <div style="background:var(--ink-panel);border:2px solid var(--gold);padding:24px;max-width:480px;width:94%;clip-path:polygon(0 0,calc(100% - 12px) 0,100% 12px,100% 100%,0 100%);">
+      <div style="font-family:var(--f-disp);font-size:20px;letter-spacing:3px;color:var(--gold-hi);margin-bottom:16px;" id="admin-modal-title">AJOUTER UN JOUEUR</div>
+      <input type="hidden" id="admin-player-id">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">NOM</div>
+          <input id="ap-nom" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:13px;padding:8px;outline:none;" placeholder="Ex: Kvaratskhelia">
+        </div>
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">CLUB</div>
+          <select id="ap-club" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;padding:8px;outline:none;">
+            <option>PSG</option><option>OM</option><option>Monaco</option>
+            <option>LOSC</option><option>OL</option><option>Lens</option>
+            <option>Rennes</option><option>Nice</option><option>Strasbourg</option>
+            <option>Toulouse</option><option>Brest</option><option>Lorient</option>
+            <option>Angers</option><option>Paris FC</option><option>Le Havre</option>
+            <option>Auxerre</option><option>Nantes</option><option>Metz</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">POSTE</div>
+          <select id="ap-poste" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-disp);font-size:11px;padding:8px;outline:none;">
+            <option>GK</option><option>DEF</option><option>MID</option><option>ATT</option>
+          </select>
+        </div>
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">COTE TM (M€)</div>
+          <input id="ap-cote" type="number" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-mono);font-size:13px;padding:8px;outline:none;" placeholder="Ex: 90">
+        </div>
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">NOTE ACTUELLE</div>
+          <input id="ap-note" type="number" step="0.1" min="0" max="10" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-mono);font-size:13px;padding:8px;outline:none;" placeholder="Ex: 7.5">
+        </div>
+        <div>
+          <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">NATIONALITÉ</div>
+          <input id="ap-nat" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:13px;padding:8px;outline:none;" placeholder="Ex: Française">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="closeAdminModal()">ANNULER</button>
+        <button class="btn btn-gold" onclick="savePlayer()" style="flex:1">💾 SAUVEGARDER</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<!-- MODAL FORMATION -->
+<div class="modal-bg" id="modal-form">
+  <div class="modal">
+    <div class="modal-title">FORMATION</div>
+    <div class="modal-sub">JOUEUR HORS POSTE = −30% STATS DUEL</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+      <div style="background:var(--ink-3);border:2px solid var(--gold);color:var(--gold-hi);padding:12px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:18px;letter-spacing:1px;transition:all .12s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">4-3-3</div>
+      <div style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:12px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:18px;letter-spacing:1px;transition:all .12s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">4-4-2</div>
+      <div style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:12px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:18px;letter-spacing:1px;transition:all .12s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">3-5-2</div>
+      <div style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:12px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:18px;letter-spacing:1px;transition:all .12s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">4-2-3-1</div>
+      <div style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:12px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:18px;letter-spacing:1px;transition:all .12s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">3-4-3</div>
+      <div style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:12px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:18px;letter-spacing:1px;transition:all .12s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">5-3-2</div>
+      <div style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:12px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:18px;letter-spacing:1px;transition:all .12s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">4-5-1</div>
+      <div style="background:var(--ink-3);border:2px solid var(--border-2);color:var(--muted);padding:12px;text-align:center;cursor:pointer;font-family:var(--f-disp);font-size:18px;letter-spacing:1px;transition:all .12s;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">3-6-1</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline btn-sm" onclick="closeModal('modal-form')">ANNULER</button>
+      <button class="btn btn-gold btn-sm" onclick="closeModal('modal-form');toast('FORMATION APPLIQUÉE','success')">CONFIRMER</button>
+    </div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+// ══════════════════════════════════════════
+// GTG — Script principal unifié
+// ══════════════════════════════════════════
+
+// ══════════════════════════════════════════
+// SUPABASE — Configuration & Auth
+// ══════════════════════════════════════════
+const SB_URL = 'https://jajkpalrjujnptjrcqwx.supabase.co'
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphamtwYWxyanVqbnB0anJjcXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODk3MjIsImV4cCI6MjA5NDg2NTcyMn0.QVfY7pTZU0SSWZI_uX918E2ai_-FemGY_rGrRqS_i2g'
+let sb = null
+let CURRENT_USER = null
+let CURRENT_PROFILE = null
+
+async function initSupabaseClient() {
+  if (!window.supabase) return
+  sb = window.supabase.createClient(SB_URL, SB_KEY, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: false,
+      detectSessionInUrl: true,
+      storageKey: 'gtg-auth-session',
+      storage: window.localStorage,
+    }
+  })
+  console.log('[GTG] ✅ Supabase connecté')
+
+  // 1. Session existante EN PREMIER
+  const { data: { session } } = await sb.auth.getSession()
+  if (session) {
+    CURRENT_USER = session.user
+    CURRENT_PROFILE = {
+      pseudo: session.user.user_metadata?.pseudo || session.user.email.split('@')[0],
+      email: session.user.email
+    }
+    sb.from('profiles').select('*').eq('id', session.user.id).single()
+      .then(({ data: p }) => { if (p) { CURRENT_PROFILE = p; updateTopbarUser() } })
+    updateTopbarUser()
+    loadDashboard()
+    checkInviteURL()
+  }
+
+  // 2. Écouter les changements futurs
+  sb.auth.onAuthStateChange((event, newSession) => {
+    console.log('[GTG Auth] Event:', event, newSession?.user?.email)
+    if (newSession && event === 'SIGNED_IN') {
+      CURRENT_USER = newSession.user
+      CURRENT_PROFILE = {
+        pseudo: newSession.user.user_metadata?.pseudo || newSession.user.email.split('@')[0],
+        email: newSession.user.email
+      }
+      sb.from('profiles').select('*').eq('id', newSession.user.id).single()
+        .then(({ data: p }) => { if (p) { CURRENT_PROFILE = p; updateTopbarUser() } })
+      updateTopbarUser()
+      closeAuthModal()
+      loadDashboard()
+      resetUserScopedCaches()
+      toast('✅ Connecté ! Bienvenue ' + CURRENT_PROFILE.pseudo, 'success')
+    } else if (event === 'SIGNED_OUT') {
+      CURRENT_USER = null
+      CURRENT_PROFILE = null
+      updateTopbarUser()
+      resetUserScopedCaches()
+    }
+  })
+}
+
+async function loadProfile() {
+  if (!CURRENT_USER) return
+  try {
+    const { data } = await sb.from('profiles').select('*').eq('id', CURRENT_USER.id).single()
+    CURRENT_PROFILE = data
+  } catch(e) {
+    CURRENT_PROFILE = { pseudo: CURRENT_USER.email.split('@')[0] }
+  }
+  // Charger les données réelles du dashboard
+  await loadDashboard()
+}
+
+async function loadDashboard() {
+  if (!CURRENT_USER || !sb) return
+  try {
+    const pseudo = CURRENT_PROFILE?.pseudo || CURRENT_USER.email.split('@')[0]
+
+    // Récupérer toutes les équipes du coach
+    const { data: teams } = await sb
+      .from('teams')
+      .select('*, league:leagues(id, nom, statut)')
+      .eq('coach_id', CURRENT_USER.id)
+
+    // Mettre à jour la topbar budget
+    const budgetDisplay = document.getElementById('budget-display')
+
+    if (!teams || !teams.length) {
+      // Pas encore d'équipe — afficher message d'accueil
+      const nameEl = document.getElementById('dash-team-name')
+      const subEl  = document.getElementById('dash-team-sub')
+      if (nameEl) nameEl.innerHTML = `<em>${pseudo.toUpperCase()}</em>`
+      if (subEl)  subEl.textContent = `Bienvenue ! Crée ou rejoins une ligue pour commencer.`
+      if (budgetDisplay) budgetDisplay.textContent = '350M€'
+      return
+    }
+
+    // Prendre la première équipe active
+    const team = teams[0]
+    const budgetM = Math.round((team.budget || 350000000000) / 1e9)
+    const ligueName = team.league?.nom || 'Ma Ligue'
+
+    const nameEl = document.getElementById('dash-team-name')
+    const subEl  = document.getElementById('dash-team-sub')
+    const budgetEl = document.getElementById('dash-budget')
+
+    if (nameEl) nameEl.innerHTML = `<em>${team.nom.toUpperCase()}</em>`
+    if (subEl)  subEl.textContent = `Coach ${pseudo} · ${ligueName}`
+    if (budgetEl) budgetEl.textContent = budgetM
+    if (budgetDisplay) budgetDisplay.textContent = budgetM + 'M€'
+
+    if (team.points !== undefined) {
+      const rankEl = document.getElementById('dash-rank')
+      if (rankEl) rankEl.innerHTML = team.points + '<sup style="font-size:16px"> pts</sup>'
+    }
+
+    // Charger les autres sections
+    await loadClassement(team.league?.id)
+    await loadMesLigues()
+    await loadMonEffectif(team.id)
+
+    console.log('[GTG] Dashboard chargé pour', pseudo)
+  } catch(e) {
+    console.warn('[GTG] Dashboard load error:', e.message)
+  }
+}
+
+// ── CLASSEMENT ────────────────────────────────────────
+async function loadClassement(leagueId) {
+  if (!leagueId || !sb) return
+  const el = document.getElementById('cl-gen')
+  if (!el) return
+  try {
+    const { data: teams } = await sb
+      .from('teams')
+      .select('*, coach:profiles!coach_id(pseudo)')
+      .eq('league_id', leagueId)
+      .order('points', { ascending: false })
+
+    if (!teams?.length) return
+
+    el.innerHTML = teams.map((t, i) => {
+      const rank = i + 1
+      const isMe = t.coach_id === CURRENT_USER?.id
+      const medals = ['👑','🥈','🥉']
+      return `
+      <div class="rank-row ${isMe?'me':''}">
+        <div class="rnum ${rank<=3?'r'+rank:''}">${rank}</div>
+        <div class="r-av">${t.nom[0]}</div>
+        <div class="r-info">
+          <div class="r-name">${t.nom.toUpperCase()}${isMe?' <span style="color:var(--cyan);font-size:10px;">[VOUS]</span>':''}</div>
+          <div class="r-coach">COACH ${(t.coach?.pseudo || '').toUpperCase()}</div>
+        </div>
+        <div class="r-pts">${t.points||0}<span> PTS</span></div>
+        <span style="font-size:18px;margin-left:8px;">${medals[i]||''}</span>
+      </div>`
+    }).join('')
+  } catch(e) { console.warn('Classement error:', e.message) }
+}
+
+// ── MES LIGUES ────────────────────────────────────────
+async function loadMesLigues() {
+  if (!CURRENT_USER || !sb) return
+  const el = document.getElementById('ligue-list')
+  if (!el) return
+  try {
+    const { data: teams } = await sb
+      .from('teams')
+      .select('*, league:leagues(id, nom, statut, nb_joueurs, code, admin_id)')
+      .eq('coach_id', CURRENT_USER.id)
+
+    if (!teams?.length) {
+      el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:16px;text-align:center;">
+        Aucune ligue active.<br>Crée ou rejoins une ligue !
+      </div>`
+      return
+    }
+
+    // Compter les équipes par ligue
+    el.innerHTML = await Promise.all(teams.map(async t => {
+      const { count } = await sb.from('teams').select('*', {count:'exact'}).eq('league_id', t.league.id)
+      const isAdmin = t.league.admin_id === CURRENT_USER.id
+      return `
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--ink-3);border:1.5px solid var(--gold-b);cursor:pointer;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);" onclick="selectLigue('${t.league.id}','${t.league.code}')">
+        <div style="width:40px;height:40px;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--f-disp);font-size:18px;color:var(--gold-hi);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);">⚽</div>
+        <div style="flex:1;">
+          <div style="font-family:var(--f-disp);font-size:16px;letter-spacing:2px;">${t.league.nom.toUpperCase()}</div>
+          <div style="font-size:10px;color:var(--muted);">${count||0}/${t.league.nb_joueurs} équipes · ${isAdmin?'👑 Admin':'Membre'}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:var(--f-disp);font-size:24px;color:var(--gold-hi);">${t.points||0}</div>
+          <div style="font-size:9px;color:var(--muted);">pts</div>
+        </div>
+        <span style="background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--green);font-family:var(--f-disp);font-size:9px;letter-spacing:1px;padding:2px 8px;">${t.league.statut?.toUpperCase()||'ACTIF'}</span>
+      </div>`
+    })).then(items => items.join(''))
+
+    // Afficher le code de la première ligue
+    if (teams[0]) {
+      const codeEl = document.querySelector('[onclick*="GTG-"]')
+      if (codeEl) {
+        codeEl.innerHTML = `
+          <div style="font-family:var(--f-mono);font-size:36px;letter-spacing:8px;color:var(--gold-hi);">${teams[0].league.code}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:4px;">Cliquer pour copier le lien</div>`
+        codeEl.onclick = () => copyCode(teams[0].league.code)
+      }
+      // Bouton WhatsApp
+      const waBtn = document.querySelector('[onclick*="shareWhatsApp"]')
+      if (waBtn) waBtn.onclick = () => shareWhatsApp(teams[0].league.code)
+    }
+
+  } catch(e) { console.warn('Ligues error:', e.message) }
+}
+
+function selectLigue(leagueId, code) {
+  // Sauvegarder la ligue sélectionnée
+  localStorage.setItem('gtg-current-league', leagueId)
+  loadClassement(leagueId)
+  toast('Ligue sélectionnée', 'info')
+}
+
+// ── MON EFFECTIF ──────────────────────────────────────
+async function loadMonEffectif(teamId) {
+  if (!teamId || !sb) return
+  try {
+    const { data: squads } = await sb
+      .from('squads')
+      .select('*, player:players(*)')
+      .eq('team_id', teamId)
+
+    if (!squads?.length) return
+
+    // Mettre à jour la page équipe
+    const pitchEl = document.querySelector('#page-equipe .pitch')
+    if (!pitchEl) return
+
+    const byPos = { GK:[], DEF:[], MID:[], ATT:[] }
+    squads.forEach(s => {
+      if (s.player && byPos[s.player.poste]) byPos[s.player.poste].push(s.player)
+    })
+
+    // Remplir le terrain
+    const posLabels = { GK:'GB', DEF:'DEF', MID:'MID', ATT:'ATT' }
+    const posColors = { GK:'GK', DEF:'DEF', MID:'MID', ATT:'ATT' }
+
+    const renderRow = (players, pos) => players.slice(0, pos==='DEF'?4:pos==='MID'?3:pos==='ATT'?3:1).map(p => {
+      const init = p.nom.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()
+      const nc = p.note_actuelle>=8 ? '' : p.note_actuelle>=7 ? 'med' : 'low'
+      return `
+      <div class="pslot" onclick="toast('${p.nom} · Note ${p.note_actuelle||6}','info')">
+        <div class="pslot-av ${posColors[pos]}">${init}
+          <div class="pslot-score ${nc}">${p.note_actuelle||6}</div>
+        </div>
+        <div class="pslot-name">${p.nom.split(' ').pop()}</div>
+        <div class="pslot-club">${p.club}</div>
+      </div>`
+    }).join('')
+
+    pitchEl.innerHTML = `
+      <div class="pitch-row">${renderRow(byPos.ATT,'ATT')}</div>
+      <div class="pitch-row" style="margin-top:18px">${renderRow(byPos.MID,'MID')}</div>
+      <div class="pitch-row" style="margin-top:18px">${renderRow(byPos.DEF,'DEF')}</div>
+      <div class="pitch-row" style="margin-top:18px">${renderRow(byPos.GK,'GK')}</div>`
+
+  } catch(e) { console.warn('Effectif error:', e.message) }
+}
+
+// ── MODULE : BUDGETS MPG PRÉDÉFINIS (saisis par l'admin à la création) ──
+let mpgBudgetMode = false
+
+function toggleMpgBudgetSetup(checked) {
+  mpgBudgetMode = checked
+  const setup = document.getElementById('mpg-budget-setup')
+  if (setup) setup.style.display = checked ? 'block' : 'none'
+  if (checked) renderMpgBudgetRows()
+}
+
+// (Re)génère les lignes nom/budget selon le nombre de participants choisi,
+// en conservant les valeurs déjà saisies si on régénère après un changement.
+function renderMpgBudgetRows() {
+  const el = document.getElementById('mpg-budget-rows')
+  if (!el) return
+  const nb = currentNbJoueurs || 8
+  const prev = Array.from(el.querySelectorAll('[data-mpg-row]')).map(row => ({
+    nom: row.querySelector('.mpg-team-nom')?.value || '',
+    budget: row.querySelector('.mpg-team-budget')?.value || ''
+  }))
+  let rows = ''
+  for (let i = 0; i < nb; i++) {
+    const nom = prev[i]?.nom || `Équipe ${i + 1}`
+    const budget = prev[i]?.budget || 350
+    rows += `<div data-mpg-row style="display:flex;gap:6px;align-items:center;">
+      <input class="mpg-team-nom" value="${nom}" style="flex:1;background:var(--ink-3);border:1px solid var(--border-2);color:var(--text);font-size:12px;padding:6px 8px;outline:none;" placeholder="Nom équipe MPG">
+      <input class="mpg-team-budget" type="number" step="1" value="${budget}" style="width:90px;background:var(--ink-3);border:1px solid var(--border-2);color:var(--gold-hi);font-family:var(--f-mono);text-align:center;padding:6px;outline:none;" placeholder="M€">
+      <span style="font-size:10px;color:var(--muted);">M€</span>
+    </div>`
+  }
+  el.innerHTML = rows
+}
+
+// Affiche la liste des équipes MPG non encore réclamées pour cette ligue
+async function showClaimTeamScreen(leagueId, leagueNom) {
+  showLigueScreen('claim')
+  const label = document.getElementById('mpg-claim-league-label')
+  if (label) label.textContent = leagueNom ? `Ligue : ${leagueNom}` : ''
+  const listEl = document.getElementById('mpg-claim-list')
+  if (listEl) listEl.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:10px;">Chargement…</div>`
+
+  const { data: planned, error } = await sb.from('mpg_planned_teams')
+    .select('id, nom, budget')
+    .eq('league_id', leagueId)
+    .is('claimed_by_team_id', null)
+    .order('nom')
+
+  if (error) {
+    if (listEl) listEl.innerHTML = `<div style="color:var(--red);font-size:12px;">Erreur : ${error.message}</div>`
+    return
+  }
+  if (!planned?.length) {
+    if (listEl) listEl.innerHTML = `<div style="color:var(--muted);font-size:12px;padding:10px;">Toutes les équipes ont déjà été réclamées par d'autres coachs.</div>`
+    return
+  }
+
+  if (listEl) listEl.innerHTML = planned.map(p => `
+    <button class="btn btn-outline btn-sm" style="display:flex;justify-content:space-between;width:100%;" onclick="claimPlannedTeam('${p.id}','${leagueId}')">
+      <span>${p.nom}</span><span style="color:var(--gold-hi)">${Math.round(p.budget / 1e9)}M€</span>
+    </button>`).join('')
+}
+
+// Réclame une équipe MPG prédéfinie : crée la vraie équipe avec le bon budget de départ
+async function claimPlannedTeam(plannedId, leagueId) {
+  if (!CURRENT_USER) { openAuthModal(); return }
+  try {
+    const { data: planned, error: e0 } = await sb.from('mpg_planned_teams')
+      .select('*').eq('id', plannedId).single()
+    if (e0 || !planned) throw new Error('Équipe introuvable')
+    if (planned.claimed_by_team_id) { toast('Cette équipe vient d\'être prise par un autre coach', 'error'); showClaimTeamScreen(leagueId); return }
+
+    const { data: existing } = await sb.from('teams')
+      .select('id').eq('league_id', leagueId).eq('coach_id', CURRENT_USER.id).maybeSingle()
+    if (existing) { toast('Tu es déjà dans cette ligue !', 'error'); return }
+
+    const { data: team, error: e1 } = await sb.from('teams').insert({
+      league_id: leagueId,
+      coach_id: CURRENT_USER.id,
+      nom: planned.nom,
+      budget: planned.budget
+    }).select('id').single()
+    if (e1) throw e1
+
+    const { error: e2 } = await sb.from('mpg_planned_teams')
+      .update({ claimed_by_team_id: team.id }).eq('id', plannedId)
+    if (e2) console.warn('[GTG] Erreur marquage équipe réclamée:', e2.message)
+
+    toast(`✅ Tu as rejoint "${planned.nom}" · Budget restant ${Math.round(planned.budget / 1e9)}M€`, 'success')
+    showLigueScreen('home')
+    await loadMesLigues()
+    await loadDashboard()
+  } catch (e) {
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+
+// ── CRÉATION LIGUE AMÉLIORÉE (plusieurs ligues) ───────
+async function createLigue() {
+  const nom = document.getElementById('new-ligue-nom')?.value?.trim()
+  if (!nom) { toast('Entre un nom pour la ligue', 'error'); return }
+  if (!CURRENT_USER) { openAuthModal(); return }
+
+  const nbJoueurs = currentNbJoueurs || 8
+  const code = 'GTG-' + Math.random().toString(36).toUpperCase().slice(2,7)
+  const pseudo = CURRENT_PROFILE?.pseudo || CURRENT_USER.email.split('@')[0]
+
+  // Si mode MPG activé : collecter et valider les budgets saisis AVANT de créer quoi que ce soit
+  let plannedTeams = []
+  if (mpgBudgetMode) {
+    const rowEls = document.querySelectorAll('#mpg-budget-rows [data-mpg-row]')
+    plannedTeams = Array.from(rowEls).map(row => ({
+      nom: row.querySelector('.mpg-team-nom')?.value?.trim() || '',
+      budget: parseFloat(row.querySelector('.mpg-team-budget')?.value)
+    })).filter(t => t.nom)
+
+    if (!plannedTeams.length) { toast('Renseigne au moins une équipe avec son budget', 'error'); return }
+    if (plannedTeams.some(t => !Number.isFinite(t.budget) || t.budget < 0)) { toast('Chaque équipe doit avoir un budget valide', 'error'); return }
+    const names = new Set(plannedTeams.map(t => t.nom.toLowerCase()))
+    if (names.size !== plannedTeams.length) { toast('Les noms d\'équipes doivent être uniques', 'error'); return }
+  }
+
+  try {
+    // 1. Créer la ligue
+    const { data: leagues, error: e1 } = await sb.from('leagues').insert({
+      nom, code,
+      admin_id: CURRENT_USER.id,
+      nb_joueurs: nbJoueurs,
+      budget_initial: 350000000000,
+      nb_tours: 3,
+      statut: 'recrutement'
+    }).select('id, nom, code')
+
+    if (e1) throw e1
+    if (!leagues || !leagues.length) throw new Error('Ligue non créée')
+
+    const leagueId = leagues[0].id
+    console.log('[GTG] Ligue créée:', leagueId)
+
+    if (mpgBudgetMode) {
+      // 2a. Mode MPG : créer les emplacements d'équipes avec budgets prédéfinis (pas encore réclamés)
+      const { error: ePlanned } = await sb.from('mpg_planned_teams').insert(
+        plannedTeams.map(t => ({ league_id: leagueId, nom: t.nom, budget: Math.round(t.budget * 1e9) }))
+      )
+      if (ePlanned) throw ePlanned
+
+      toast(`🎉 Ligue "${nom}" créée avec ${plannedTeams.length} équipes MPG ! Choisis la tienne.`, 'success')
+      await loadMesLigues()
+      await loadDashboard()
+      await showClaimTeamScreen(leagueId, nom)
+      return
+    }
+
+    // 2b. Mode classique : équipe auto-créée pour le créateur avec le budget par défaut
+    const { data: teamData, error: e2 } = await sb.from('teams').insert({
+      league_id: leagueId,
+      coach_id: CURRENT_USER.id,
+      nom: pseudo + ' FC',
+      budget: 350000000000
+    }).select('id')
+
+    if (e2) {
+      console.error('[GTG] Erreur création équipe:', e2)
+      throw e2
+    }
+    console.log('[GTG] Équipe créée:', teamData)
+
+    toast(`🎉 Ligue "${nom}" créée ! Code : ${code}`, 'success')
+    showInviteCode(code)
+    showLigueScreen('home')
+    await loadMesLigues()
+    await loadDashboard()
+
+  } catch(e) {
+    console.error('[GTG] createLigue error:', e)
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+
+// ── REJOINDRE LIGUE AMÉLIORÉ ──────────────────────────
+async function joinLigue() {
+  if (!CURRENT_USER) { openAuthModal(); return }
+  const btn = document.getElementById('btn-join-confirm')
+  const leagueId = btn?.dataset.leagueId
+  const leagueCode = btn?.dataset.leagueCode
+
+  try {
+    // Vérifier si déjà dans cette ligue
+    const { data: existing } = await sb.from('teams')
+      .select('id').eq('league_id', leagueId).eq('coach_id', CURRENT_USER.id).single()
+    if (existing) { toast('Tu es déjà dans cette ligue !', 'error'); return }
+
+    const pseudo = CURRENT_PROFILE?.pseudo || CURRENT_USER.email.split('@')[0]
+    const { error } = await sb.from('teams').insert({
+      league_id: leagueId,
+      coach_id: CURRENT_USER.id,
+      nom: pseudo + ' FC',
+      budget: 350000000000
+    })
+    if (error) throw error
+
+    toast('✅ Tu as rejoint la ligue !', 'success')
+    showLigueScreen('home')
+    await loadMesLigues()
+    await loadDashboard()
+
+  } catch(e) {
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+
+// ── LOOKUP LIGUE AMÉLIORÉ ─────────────────────────────
+async function lookupLigue() {
+  const code = document.getElementById('join-code-input')?.value?.trim().toUpperCase()
+  if (!code || code.length < 5) { toast('Code invalide', 'error'); return }
+  const el  = document.getElementById('join-result')
+  const btn = document.getElementById('btn-join-confirm')
+
+  try {
+    const { data, error } = await sb.from('leagues')
+      .select('*, teams(count)').eq('code', code).single()
+
+    if (error || !data) {
+      if (el) el.innerHTML = '<div style="background:var(--red-d);border:1px solid var(--red-b);padding:10px;font-size:13px;color:var(--red);">❌ Code introuvable</div>'
+      if (btn) btn.style.display = 'none'
+      return
+    }
+
+    const nb = data.teams?.[0]?.count || 0
+
+    // Cette ligue a-t-elle des équipes MPG prédéfinies non réclamées ?
+    const { data: planned } = await sb.from('mpg_planned_teams')
+      .select('id, nom, budget').eq('league_id', data.id).is('claimed_by_team_id', null)
+
+    if (planned?.length) {
+      if (el) el.innerHTML = `<div style="background:rgba(26,238,106,.08);border:1px solid rgba(26,238,106,.3);padding:10px;font-size:13px;color:#22dd50;font-family:var(--f-disp);letter-spacing:1px;margin-bottom:10px;">
+        ✅ ${data.nom.toUpperCase()} · ${nb}/${data.nb_joueurs} équipes
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:6px;">Cette ligue reprend des effectifs MPG — choisis ton équipe :</div>`
+      if (btn) btn.style.display = 'none'
+      showClaimTeamScreen(data.id, data.nom)
+      return
+    }
+
+    if (el) el.innerHTML = `<div style="background:rgba(26,238,106,.08);border:1px solid rgba(26,238,106,.3);padding:10px;font-size:13px;color:#22dd50;font-family:var(--f-disp);letter-spacing:1px;">
+      ✅ ${data.nom.toUpperCase()} · ${nb}/${data.nb_joueurs} équipes
+    </div>`
+    if (btn) {
+      btn.style.display = 'block'
+      btn.dataset.leagueId   = data.id
+      btn.dataset.leagueCode = data.code
+    }
+  } catch(e) {
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+
+function updateTopbarUser() {
+  const btn = document.getElementById('tb-auth-btn')
+  const lbl = document.getElementById('tb-user-label')
+  if (!btn) return
+  if (CURRENT_USER) {
+    const pseudo = CURRENT_PROFILE?.pseudo || CURRENT_USER.email.split('@')[0]
+    if (lbl) lbl.textContent = pseudo
+    btn.textContent = '🚪 DÉCO'
+    btn.onclick = () => logout()
+  } else {
+    if (lbl) lbl.textContent = ''
+    btn.textContent = '🔐 CONNEXION'
+    btn.onclick = () => openAuthModal()
+  }
+  checkAdminAccess()
+}
+
+async function logout() {
+  await sb?.auth.signOut()
+  CURRENT_USER = null
+  CURRENT_PROFILE = null
+  updateTopbarUser()
+  resetUserScopedCaches()
+  toast('À bientôt !', 'info')
+}
+
+// Réinitialise les données mises en cache qui dépendent du coach connecté
+// (mercato + simulateur), pour forcer un rechargement propre au prochain login/logout.
+function resetUserScopedCaches() {
+  encLoaded = false; encLoading = false; encErrorMsg = null
+  encPlayers = []; encBasket = {}; encEngaged = 0
+  encTeamId = null; encLeagueId = null
+
+  simLoaded = false; simLoading = false; simErrorMsg = null
+  simIsDemo = true; simHomeName = 'LES INVINCIBLES'; simAwayName = 'DRAGON FC'; simJournee = null
+}
+
+// Vérifier si l'URL contient ?join=CODE
+function checkInviteURL() {
+  const params = new URLSearchParams(window.location.search)
+  const joinCode = params.get('join')
+  if (joinCode) {
+    // Naviguer vers la page ligue et pré-remplir le code
+    const navLigue = document.querySelector('[onclick*="ligue"]')
+    goto('ligue', navLigue)
+    showLigueScreen('join')
+    setTimeout(() => {
+      const input = document.getElementById('join-code-input')
+      if (input) { input.value = joinCode.toUpperCase(); lookupLigue(); }
+    }, 300)
+    // Nettoyer l'URL
+    window.history.replaceState({}, '', '/')
+  }
+}
+
+// ══════════════════════════════════════════
+// MODAL AUTH — Connexion / Inscription
+// ══════════════════════════════════════════
+function openAuthModal() {
+  // Créer la modal si elle n'existe pas
+  if (!document.getElementById('auth-modal')) {
+    const m = document.createElement('div')
+    m.id = 'auth-modal'
+    m.style.cssText = 'display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.92);backdrop-filter:blur(4px);align-items:center;justify-content:center;'
+    m.innerHTML = `
+      <div style="background:var(--ink-panel);border:2px solid var(--gold);padding:28px;max-width:420px;width:93%;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,16px 100%,0 calc(100% - 16px));position:relative;box-shadow:6px 6px 0 rgba(200,160,32,.3);">
+        <div style="position:absolute;top:0;left:0;right:16px;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-hi),var(--gold))"></div>
+
+        <!-- Tabs -->
+        <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border-2);">
+          <button id="auth-tab-login" onclick="switchAuthTab('login')" style="flex:1;padding:9px;background:var(--gold-dim);border:none;border-bottom:3px solid var(--gold);margin-bottom:-2px;color:var(--gold-hi);font-family:var(--f-disp);font-size:13px;letter-spacing:2px;cursor:pointer;">CONNEXION</button>
+          <button id="auth-tab-signup" onclick="switchAuthTab('signup')" style="flex:1;padding:9px;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;color:var(--muted);font-family:var(--f-disp);font-size:13px;letter-spacing:2px;cursor:pointer;">INSCRIPTION</button>
+        </div>
+
+        <div id="auth-error" style="display:none;background:rgba(255,26,46,.1);border:1px solid var(--red);color:var(--red);padding:8px 12px;font-size:12px;margin-bottom:12px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%)"></div>
+
+        <!-- LOGIN -->
+        <div id="auth-form-login">
+          <div style="font-family:var(--f-disp);font-size:22px;letter-spacing:3px;color:var(--gold-hi);margin-bottom:4px;">BON RETOUR</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Connecte-toi pour jouer</div>
+          <div style="margin-bottom:10px;">
+            <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">EMAIL</div>
+            <input id="auth-email" type="email" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:14px;padding:9px 12px;outline:none;" placeholder="coach@exemple.fr">
+          </div>
+          <div style="margin-bottom:8px;">
+            <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">MOT DE PASSE</div>
+            <input id="auth-password" type="password" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:14px;padding:9px 12px;outline:none;" placeholder="••••••••">
+          </div>
+          <div style="text-align:right;margin-bottom:14px;">
+            <span onclick="sendMagicLink()" style="font-size:11px;color:var(--gold);cursor:pointer;letter-spacing:1px;">Connexion par lien email →</span>
+          </div>
+          <button onclick="doLogin()" style="width:100%;background:var(--gold);border:none;color:#000;font-family:var(--f-disp);font-size:14px;letter-spacing:3px;padding:12px;cursor:pointer;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);margin-bottom:10px;" id="btn-login">SE CONNECTER</button>
+          <div style="text-align:center;font-size:11px;color:var(--muted);">Pas de compte ? <span onclick="switchAuthTab('signup')" style="color:var(--gold);cursor:pointer;">S'inscrire</span></div>
+        </div>
+
+        <!-- SIGNUP -->
+        <div id="auth-form-signup" style="display:none;">
+          <div style="font-family:var(--f-disp);font-size:22px;letter-spacing:3px;color:var(--gold-hi);margin-bottom:4px;">REJOINS LA PARTIE</div>
+          <div style="font-size:11px;color:var(--muted);margin-bottom:16px;">Crée ton compte coach · Gratuit</div>
+          <div style="margin-bottom:10px;">
+            <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">PSEUDO (nom de coach)</div>
+            <input id="auth-pseudo" type="text" maxlength="20" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:14px;padding:9px 12px;outline:none;" placeholder="CoachRomain">
+          </div>
+          <div style="margin-bottom:10px;">
+            <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">EMAIL</div>
+            <input id="auth-email-s" type="email" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:14px;padding:9px 12px;outline:none;" placeholder="coach@exemple.fr">
+          </div>
+          <div style="margin-bottom:16px;">
+            <div style="font-family:var(--f-disp);font-size:10px;letter-spacing:2px;color:var(--muted);margin-bottom:4px;">MOT DE PASSE (8 min)</div>
+            <input id="auth-password-s" type="password" style="width:100%;background:var(--ink-2);border:2px solid var(--border-2);color:var(--text);font-family:var(--f-ui);font-size:14px;padding:9px 12px;outline:none;" placeholder="••••••••">
+          </div>
+          <button onclick="doSignup()" style="width:100%;background:var(--gold);border:none;color:#000;font-family:var(--f-disp);font-size:14px;letter-spacing:3px;padding:12px;cursor:pointer;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);margin-bottom:10px;" id="btn-signup">CRÉER MON COMPTE</button>
+          <div style="text-align:center;font-size:11px;color:var(--muted);">Déjà un compte ? <span onclick="switchAuthTab('login')" style="color:var(--gold);cursor:pointer;">Se connecter</span></div>
+        </div>
+
+        <button onclick="closeAuthModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;">✕</button>
+      </div>`
+    m.addEventListener('click', e => { if(e.target===m) closeAuthModal() })
+    document.body.appendChild(m)
+  }
+  document.getElementById('auth-modal').style.display = 'flex'
+}
+
+function closeAuthModal() {
+  const m = document.getElementById('auth-modal')
+  if (m) m.style.display = 'none'
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('auth-form-login').style.display  = tab==='login'  ? 'block':'none'
+  document.getElementById('auth-form-signup').style.display = tab==='signup' ? 'block':'none'
+  document.getElementById('auth-tab-login').style.borderBottomColor  = tab==='login'  ? 'var(--gold)':'transparent'
+  document.getElementById('auth-tab-login').style.color  = tab==='login'  ? 'var(--gold-hi)':'var(--muted)'
+  document.getElementById('auth-tab-login').style.background  = tab==='login'  ? 'var(--gold-dim)':'none'
+  document.getElementById('auth-tab-signup').style.borderBottomColor = tab==='signup' ? 'var(--gold)':'transparent'
+  document.getElementById('auth-tab-signup').style.color = tab==='signup' ? 'var(--gold-hi)':'var(--muted)'
+  document.getElementById('auth-tab-signup').style.background = tab==='signup' ? 'var(--gold-dim)':'none'
+  document.getElementById('auth-error').style.display = 'none'
+}
+
+async function doLogin() {
+  const email = document.getElementById('auth-email')?.value?.trim()
+  const pass  = document.getElementById('auth-password')?.value
+  if (!email||!pass) { showAuthError('Remplis tous les champs'); return }
+
+  const btn = document.getElementById('btn-login')
+  btn.textContent = '⏳...'
+  btn.disabled = true
+
+  try {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass })
+    if (error) throw error
+    if (!data?.session) throw new Error('Pas de session reçue')
+
+    CURRENT_USER    = data.user
+    CURRENT_PROFILE = { pseudo: data.user.user_metadata?.pseudo || email.split('@')[0], email }
+
+    // Charger le vrai profil en arrière-plan
+    sb.from('profiles').select('*').eq('id', data.user.id).single()
+      .then(({ data: p }) => { if (p) CURRENT_PROFILE = p; updateTopbarUser() })
+
+    updateTopbarUser()
+    closeAuthModal()
+    btn.textContent = 'SE CONNECTER'
+    btn.disabled = false
+    loadDashboard()
+    toast('✅ Connecté ! Bienvenue ' + CURRENT_PROFILE.pseudo, 'success')
+    return
+
+  } catch(e) {
+    showAuthError(e.message.includes('Invalid') || e.message.includes('credentials')
+      ? 'Email ou mot de passe incorrect'
+      : e.message)
+  }
+  btn.textContent = 'SE CONNECTER'
+  btn.disabled = false
+}
+
+async function doSignup() {
+  const pseudo = document.getElementById('auth-pseudo')?.value?.trim()
+  const email  = document.getElementById('auth-email-s')?.value?.trim()
+  const pass   = document.getElementById('auth-password-s')?.value
+  if (!pseudo||!email||!pass) { showAuthError('Remplis tous les champs'); return }
+  if (pass.length < 8) { showAuthError('Mot de passe trop court (8 min)'); return }
+
+  const btn = document.getElementById('btn-signup')
+  btn.textContent = '⏳...'
+  btn.disabled = true
+
+  try {
+    // Créer le compte
+    const { data, error } = await sb.auth.signUp({
+      email, password: pass,
+      options: { data: { pseudo }, emailRedirectTo: null }
+    })
+    if (error) throw error
+
+    // Créer le profil si on a l'ID (sans attendre)
+    if (data?.user?.id) {
+      sb.from('profiles').upsert(
+        { id: data.user.id, pseudo, email },
+        { onConflict: 'id' }
+      ).then(() => {})
+    }
+
+    // Basculer sur connexion avec champs pré-remplis
+    btn.textContent = 'CRÉER MON COMPTE'
+    btn.disabled = false
+    showAuthError('✅ Compte créé ! Connecte-toi ci-dessous.', true)
+    const emailLogin = document.getElementById('auth-email')
+    const passLogin  = document.getElementById('auth-password')
+    if (emailLogin) emailLogin.value = email
+    if (passLogin)  passLogin.value  = pass
+    switchAuthTab('login')
+    return
+
+  } catch(e) {
+    showAuthError(e.message.includes('already') ? 'Email déjà utilisé' : e.message)
+  }
+  btn.textContent = 'CRÉER MON COMPTE'
+  btn.disabled = false
+}
+
+async function sendMagicLink() {
+  const email = document.getElementById('auth-email')?.value?.trim()
+  if (!email) { showAuthError('Entre ton email d\'abord'); return }
+  try {
+    const { error } = await sb.auth.signInWithOtp({
+      email,
+      options: { emailRedirectTo: 'https://goldtogoat2.netlify.app' }
+    })
+    if (error) throw error
+    showAuthError('📧 Lien envoyé ! Vérifie ta boîte mail.', true)
+  } catch(e) {
+    showAuthError(e.message)
+  }
+}
+
+// Appelée après connexion via magic link pour définir un vrai mot de passe
+async function setPassword(newPass) {
+  if (!sb || !CURRENT_USER) return
+  try {
+    const { error } = await sb.auth.updateUser({ password: newPass })
+    if (error) throw error
+    toast('✅ Mot de passe défini ! Tu peux maintenant te connecter avec.', 'success')
+  } catch(e) {
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+
+// Proposer de définir un mot de passe après connexion via magic link
+function promptSetPassword() {
+  const pass = prompt('Définis un mot de passe pour te connecter plus facilement (8 caractères min) :')
+  if (pass && pass.length >= 8) {
+    setPassword(pass)
+  } else if (pass) {
+    toast('Mot de passe trop court (8 min)', 'error')
+  }
+}
+
+function showAuthError(msg, success=false) {
+  const el = document.getElementById('auth-error')
+  if (!el) return
+  el.style.display = 'block'
+  el.textContent = msg
+  el.style.background = success ? 'rgba(26,238,106,.1)' : 'rgba(255,26,46,.1)'
+  el.style.borderColor = success ? 'var(--green)' : 'var(--red)'
+  el.style.color = success ? 'var(--green)' : 'var(--red)'
+}
+
+// Lien d'invitation partageable
+function getInviteLink(code) {
+  return `https://goldtogoat2.netlify.app/?join=${code}`
+}
+
+// ── NAV ──
+const PAGE_NAMES = {
+  dashboard:'DASHBOARD', equipe:'MON ÉQUIPE', mercato:'MERCATO · ENCHÈRES',
+  match:'SIMULATEUR GTG', classement:'CLASSEMENT', joueurs:'BASE TRANSFERMARKT',
+  ligue:'SYSTÈME LIGUE', ai:'IA COACH'
+};
+function goto(id, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + id)?.classList.add('active');
+  el?.classList.add('active');
+  document.getElementById('topbar-page').textContent = PAGE_NAMES[id] || '';
+  if (id === 'joueurs') { dbPage = 1; renderDB(); }
+  if (id === 'mercato') { loadEncherePlayers().then(() => renderEnchere()); }
+  if (id === 'match') { if (!simLoaded && !simLoading) { loadSimMatch(); } else { renderSimHeader(); } }
+  if (id === 'ai') initAIChat();
+}
+
+// ── TABS ──
+function switchTab(showId, hideId, el) {
+  document.getElementById(showId).style.display = '';
+  document.getElementById(hideId).style.display = 'none';
+  el.closest('.itabs').querySelectorAll('.itab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ── MODALS ──
+function openModal(id) { document.getElementById(id)?.classList.add('open'); }
+function closeModal(id) { document.getElementById(id)?.classList.remove('open'); }
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.modal-bg').forEach(m =>
+    m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); })
+  );
+  // Init Supabase
+  initSupabaseClient();
+});
+
+// ── TOAST ──
+function toast(msg, type = 'info') {
+  const c = document.getElementById('toasts');
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  t.innerHTML = `<span>${type==='success'?'✅':type==='error'?'✗':'⚡'}</span> ${msg}`;
+  c.appendChild(t);
+  setTimeout(() => { t.style.opacity='0'; t.style.transition='opacity .3s'; setTimeout(() => t.remove(), 300); }, 3500);
+}
+
+// ── TIMER ──
+let ts = 62*3600 + 14*22;
+setInterval(() => {
+  if (ts > 0) ts--;
+  const h = String(Math.floor(ts/3600)).padStart(2,'0');
+  const m = String(Math.floor((ts%3600)/60)).padStart(2,'0');
+  const s = String(ts%60).padStart(2,'0');
+  const el = document.getElementById('live-timer');
+  if (el) el.textContent = `J32 ${h}:${m}:${s}`;
+}, 1000);
+
+// ══════════════════════════════════════════
+// MODULE : BASE JOUEURS TRANSFERMARKT — Connecté à Supabase
+// ══════════════════════════════════════════
+let TM_PLAYERS  = [];   // chargé depuis la table players
+let tmLoaded    = false;
+let tmLoading   = false;
+let tmErrorMsg  = null;
+
+async function loadTMPlayers() {
+  if (tmLoading) return
+  tmLoading = true; tmErrorMsg = null
+  try {
+    if (!sb) { tmErrorMsg = 'Connexion à la base indisponible.'; return }
+    const { data, error } = await sb.from('players')
+      .select('*').eq('actif', true).order('cote_tm', { ascending: false })
+    if (error) { tmErrorMsg = 'Erreur chargement joueurs : ' + error.message; return }
+    TM_PLAYERS = (data || []).map(p => ({
+      id:   p.id,
+      n:    p.nom,
+      c:    p.club,
+      p:    p.poste,
+      cote: Math.round((p.cote_tm || 0) / 1e6),
+      prev: Math.round((p.cote_prev ?? p.cote_tm ?? 0) / 1e6),
+      note: p.note_actuelle
+    }))
+    if (!TM_PLAYERS.length) tmErrorMsg = 'Aucun joueur en base pour le moment.'
+  } catch (e) {
+    tmErrorMsg = 'Erreur inattendue : ' + (e?.message || e)
+  } finally {
+    tmLoaded = true; tmLoading = false
+  }
+}
+
+let dbPage = 1;
+const DB_PP = 20;
+
+function getDBFiltered() {
+  const q   = (document.getElementById('db-search')?.value || '').toLowerCase();
+  const pos = document.getElementById('db-pos')?.value || 'ALL';
+  const srt = document.getElementById('db-sort')?.value || 'cote_d';
+  let list = [...TM_PLAYERS];
+  if (pos !== 'ALL') list = list.filter(p => p.p === pos);
+  if (q) list = list.filter(p => p.n.toLowerCase().includes(q) || p.c.toLowerCase().includes(q));
+  if (srt === 'cote_d') list.sort((a,b) => b.cote - a.cote);
+  else if (srt === 'cote_a') list.sort((a,b) => a.cote - b.cote);
+  else list.sort((a,b) => a.n.localeCompare(b.n));
+  return list;
+}
+
+const POS_COLORS = {GK:'var(--gold)',DEF:'#00ccff',MID:'#aa64ff',ATT:'var(--red)'};
+const POS_BG     = {GK:'rgba(200,160,32,.12)',DEF:'rgba(0,204,255,.1)',MID:'rgba(170,100,255,.1)',ATT:'rgba(255,26,46,.1)'};
+
+function renderDB() {
+  const tbody  = document.getElementById('db-tbody');
+  const pag    = document.getElementById('db-pag');
+  if (!tbody) return;
+
+  // Chargement pas encore lancé : on le déclenche une seule fois
+  if (!tmLoaded && !tmLoading) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--muted);">Chargement des joueurs…</td></tr>`;
+    loadTMPlayers().then(renderDB);
+    return;
+  }
+  if (tmLoading) return; // un rendu suivra dès la fin du chargement en cours
+
+  if (tmErrorMsg && !TM_PLAYERS.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--muted);">⚠️ ${tmErrorMsg}</td></tr>`;
+    if (pag) pag.innerHTML = '';
+    return;
+  }
+
+  const list   = getDBFiltered();
+  const start  = (dbPage - 1) * DB_PP;
+  const page   = list.slice(start, start + DB_PP);
+  tbody.innerHTML = page.map((p, i) => {
+    const rank  = start + i + 1;
+    const delta = p.cote - p.prev;
+    const pc    = POS_COLORS[p.p];
+    const pb    = POS_BG[p.p];
+    const init  = p.n.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    return `<tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='rgba(200,160,32,.03)'" onmouseout="this.style.background=''">
+      <td style="padding:8px 12px;font-family:var(--f-disp);font-size:14px;color:${rank<=3?'var(--gold-hi)':'var(--muted)'};">${rank}</td>
+      <td style="padding:8px 12px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-family:var(--f-disp);font-size:10px;border:1.5px solid ${pc};background:${pb};color:${pc};">${init}</div>
+          <div><div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">${p.n}</div><div style="font-size:10px;color:var(--muted);">${p.c}</div></div>
+        </div>
+      </td>
+      <td style="padding:8px 12px;"><span style="font-family:var(--f-disp);font-size:9px;letter-spacing:1px;padding:2px 6px;border:1px solid ${pc};background:${pb};color:${pc};">${p.p}</span></td>
+      <td style="padding:8px 12px;font-size:12px;color:var(--muted);">${p.c}</td>
+      <td style="padding:8px 12px;font-family:var(--f-mono);font-size:14px;color:${p.cote>=80?'var(--gold-hi)':p.cote>=40?'var(--gold)':'var(--muted)'};">${p.cote}M€</td>
+      <td style="padding:8px 12px;font-size:11px;font-family:var(--f-mono);color:${delta>0?'#22dd50':delta<0?'var(--red)':'var(--muted)'};">${delta>0?'▲ +'+delta:delta<0?'▼ '+delta:'–'}M</td>
+      <td style="padding:8px 12px;"><button class="btn btn-outline btn-sm" onclick="goto('mercato', document.querySelector('.nav-item[title=Mercato]')); toast('⚡ Recherche ${p.n} dans le mercato','info')">ENCHÉRIR</button></td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  const total = Math.ceil(list.length / DB_PP);
+  if (!pag) return;
+  if (total <= 1) { pag.innerHTML = ''; return; }
+  let h = `<button class="btn btn-outline btn-sm" onclick="dbGo(${dbPage-1})" ${dbPage===1?'disabled':''}>‹</button>`;
+  const s = Math.max(1,dbPage-2), e = Math.min(total,s+4);
+  for (let i=s;i<=e;i++) h+=`<button class="btn ${i===dbPage?'btn-gold':'btn-outline'} btn-sm" onclick="dbGo(${i})">${i}</button>`;
+  h += `<button class="btn btn-outline btn-sm" onclick="dbGo(${dbPage+1})" ${dbPage===total?'disabled':''}>›</button>`;
+  pag.innerHTML = h;
+}
+
+function dbGo(p) {
+  const max = Math.ceil(getDBFiltered().length / DB_PP);
+  if (p < 1 || p > max) return;
+  dbPage = p;
+  renderDB();
+}
+
+// ══════════════════════════════════════════
+// MODULE : ENCHÈRES
+// ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// MODULE : MERCATO — Connecté à Supabase
+// ══════════════════════════════════════════
+let encBudget  = 350;  // M€
+let encBasket  = {};   // player_id → {nom, cote, montant}
+let encEngaged = 0;
+let encPlayers = [];   // joueurs chargés depuis Supabase
+let encTeamId  = null;
+let encLeagueId = null;
+let encTour    = 1;
+let encLoaded    = false;  // true dès qu'un chargement a été tenté (succès ou non)
+let encLoading   = false;  // évite les chargements concurrents
+let encErrorMsg  = null;   // message à afficher si on ne peut pas charger
+
+// Charger les joueurs disponibles depuis Supabase
+async function loadEncherePlayers() {
+  if (encLoading) return          // déjà en cours, on ne relance pas
+  encLoading = true
+  encErrorMsg = null
+
+  try {
+    if (!sb) { encErrorMsg = 'Connexion à la base indisponible.'; return }
+    if (!CURRENT_USER) { encErrorMsg = 'Connecte-toi pour accéder au mercato.'; return }
+
+    // Récupérer l'équipe active
+    const { data: teams, error: teamErr } = await sb.from('teams')
+      .select('id, budget, league_id, league:leagues(statut, nb_tours)')
+      .eq('coach_id', CURRENT_USER.id).limit(1)
+
+    if (teamErr) { encErrorMsg = 'Erreur chargement équipe : ' + teamErr.message; return }
+
+    if (!teams?.length) {
+      encErrorMsg = 'Rejoins ou crée une ligue pour accéder au mercato.'
+      return
+    }
+
+    const team = teams[0]
+    encTeamId   = team.id
+    encLeagueId = team.league_id
+    encBudget   = Number.isFinite(team.budget) ? Math.round(team.budget / 1e9) : 350
+
+    // Charger les enchères existantes de ce tour
+    const { data: bids } = await sb.from('bids')
+      .select('*, player:players(nom)')
+      .eq('team_id', encTeamId)
+      .eq('tour', encTour)
+      .eq('submitted', false)
+
+    encBasket = {}
+    encEngaged = 0
+    if (bids?.length) {
+      bids.forEach(b => {
+        const montantM = Math.round(b.montant / 1e9)
+        encBasket[b.player_id] = { nom: b.player?.nom, cote: montantM, montant: montantM, bidId: b.id }
+        encEngaged += montantM
+      })
+    }
+
+    // Récupérer les joueurs non encore dans une équipe de cette ligue
+    let query = sb.from('players').select('*').eq('actif', true).order('cote_tm', { ascending: false })
+
+    if (encLeagueId) {
+      // Exclure joueurs déjà dans une équipe de la ligue
+      const { data: taken } = await sb.from('squads')
+        .select('player_id').eq('league_id', encLeagueId)
+      const takenIds = taken?.map(s => s.player_id) || []
+      if (takenIds.length) query = query.not('id', 'in', `(${takenIds.join(',')})`)
+    }
+
+    const { data, error: playersErr } = await query
+    if (playersErr) { encErrorMsg = 'Erreur chargement joueurs : ' + playersErr.message; return }
+
+    encPlayers = data || []
+    if (!encPlayers.length) encErrorMsg = 'Aucun joueur disponible pour le moment.'
+  } catch (e) {
+    encErrorMsg = 'Erreur inattendue : ' + (e?.message || e)
+  } finally {
+    encLoaded = true
+    encLoading = false
+    updateEncBudget()
+  }
+}
+
+function getEncFiltered() {
+  const q   = (document.getElementById('enc-search')?.value || '').toLowerCase()
+  const pos = document.getElementById('enc-pos')?.value || 'ALL'
+  return encPlayers.filter(p => {
+    const mp = pos === 'ALL' || p.poste === pos
+    const ms = !q || p.nom.toLowerCase().includes(q) || p.club.toLowerCase().includes(q)
+    return mp && ms
+  }).slice(0, 30)
+}
+
+function renderEnchere() {
+  const el = document.getElementById('enc-list')
+  if (!el) return
+
+  // Chargement pas encore lancé : on le déclenche une seule fois
+  if (!encLoaded && !encLoading) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Chargement des joueurs…</div>`
+    loadEncherePlayers().then(renderEnchere)
+    return
+  }
+  if (encLoading) return  // un rendu suivra dès la fin du chargement en cours
+
+  if (encErrorMsg && !encPlayers.length) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">⚠️ ${encErrorMsg}</div>`
+    return
+  }
+
+  const list = getEncFiltered()
+  if (!list.length) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px;">Aucun joueur ne correspond à ta recherche.</div>`
+    updateEncBudget()
+    return
+  }
+  el.innerHTML = list.map(p => {
+    const inBasket = p.id in encBasket
+    const coteM = Math.round((p.cote_tm || 0) / 1e6)
+    const pc = POS_COLORS[p.poste] || 'var(--muted)'
+    const pb = POS_BG[p.poste] || 'transparent'
+    return `<div style="display:flex;align-items:center;gap:10px;padding:9px 12px;background:${inBasket?'rgba(26,238,106,.06)':'var(--ink-3)'};border:1.5px solid ${inBasket?'rgba(26,238,106,.3)':'var(--border)'};margin-bottom:4px;clip-path:polygon(0 0,calc(100% - 7px) 0,100% 7px,100% 100%,0 100%);">
+      <span style="font-family:var(--f-disp);font-size:9px;letter-spacing:1px;padding:2px 6px;border:1px solid ${pc};background:${pb};color:${pc};">${p.poste}</span>
+      <div style="flex:1;">
+        <div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">${p.nom}</div>
+        <div style="font-size:10px;color:var(--muted);">${p.club} · Note: <strong style="color:var(--cyan)">${p.note_actuelle||'-'}</strong> · Min: <strong style="color:var(--gold)">${coteM}M€</strong></div>
+      </div>
+      <input type="number" id="bid-${p.id}" placeholder="${coteM}" min="${coteM}" value="${inBasket ? encBasket[p.id].montant : ''}" style="width:72px;background:var(--ink-2);border:1.5px solid var(--border-2);color:var(--gold-hi);font-family:var(--f-mono);font-size:14px;text-align:center;padding:5px 8px;outline:none;">
+      <span style="font-size:11px;color:var(--muted);">M€</span>
+      <button class="btn btn-gold btn-sm" onclick="addBid('${p.id}','${p.nom}',${coteM})">+ PANIER</button>
+      ${inBasket ? `<span style="font-family:var(--f-disp);font-size:9px;color:#22dd50;letter-spacing:1px;">${encBasket[p.id].montant}M€ ✓</span>` : ''}
+    </div>`
+  }).join('')
+  updateEncBudget()
+}
+
+async function addBid(playerId, nom, minCote) {
+  const v = parseFloat(document.getElementById(`bid-${playerId}`)?.value || 0)
+  if (!v || v < minCote) { toast(`Minimum ${minCote}M€`, 'error'); return }
+  if (v > encBudget - encEngaged + (encBasket[playerId]?.montant || 0)) {
+    toast('Budget insuffisant', 'error'); return
+  }
+
+  encEngaged -= (encBasket[playerId]?.montant || 0)
+  encBasket[playerId] = { nom, cote: minCote, montant: v }
+  encEngaged += v
+
+  // Sauvegarder en base si connecté et dans une ligue
+  if (sb && encTeamId && encLeagueId) {
+    const existing = encBasket[playerId]?.bidId
+    if (existing) {
+      await sb.from('bids').update({ montant: v * 1e9 }).eq('id', existing)
+    } else {
+      const { data } = await sb.from('bids').insert({
+        team_id: encTeamId,
+        league_id: encLeagueId,
+        player_id: playerId,
+        tour: encTour,
+        montant: v * 1e9,
+        submitted: false
+      }).select('id').single()
+      if (data) encBasket[playerId].bidId = data.id
+    }
+  }
+
+  updateEncBudget()
+  renderEnchere()
+  renderPanier()
+  toast(`${nom} → ${v}M€ ajouté au panier`, 'success')
+}
+
+function renderPanier() {
+  const list = document.getElementById('enc-panier-list')
+  const panel = document.getElementById('enc-panier-panel')
+  if (!list) return
+  const items = Object.entries(encBasket)
+  if (!items.length) { if(panel) panel.style.display = 'none'; return }
+  if(panel) panel.style.display = 'block'
+  list.innerHTML = items.map(([id, p]) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--ink-3);border:1px solid var(--border);margin-bottom:4px;clip-path:polygon(0 0,calc(100% - 6px) 0,100% 6px,100% 100%,0 100%);">
+      <div style="flex:1;font-family:var(--f-disp);font-size:13px;letter-spacing:1px;">${p.nom}</div>
+      <div style="font-family:var(--f-mono);font-size:15px;color:var(--gold-hi);">${p.montant}M€</div>
+      <button style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:14px;" onclick="removeBid('${id}')">✕</button>
+    </div>`).join('')
+}
+
+async function removeBid(playerId) {
+  const bid = encBasket[playerId]
+  if (bid?.bidId && sb) {
+    await sb.from('bids').delete().eq('id', bid.bidId)
+  }
+  encEngaged -= (bid?.montant || 0)
+  delete encBasket[playerId]
+  updateEncBudget()
+  renderEnchere()
+  renderPanier()
+}
+
+function updateEncBudget() {
+  const rem = encBudget - encEngaged
+  const el1 = document.getElementById('enc-budget-disp')
+  const el2 = document.getElementById('enc-panier-disp')
+  const el3 = document.getElementById('enc-engaged')
+  const bar  = document.getElementById('enc-budget-bar')
+  if (el1) el1.textContent = rem.toFixed(1) + 'M€'
+  if (el2) el2.textContent = encEngaged.toFixed(1) + 'M€'
+  if (el3) el3.textContent = encEngaged.toFixed(1) + 'M€'
+  if (bar) bar.style.width = Math.max(0, (rem / 350 * 100)) + '%'
+}
+
+async function submitBids() {
+  if (!Object.keys(encBasket).length) { toast('Aucune enchère dans le panier', 'error'); return }
+
+  const total = Object.values(encBasket).reduce((s, p) => s + p.montant, 0)
+
+  // Marquer toutes les enchères comme soumises
+  if (sb && encTeamId) {
+    const bidIds = Object.values(encBasket).map(b => b.bidId).filter(Boolean)
+    if (bidIds.length) {
+      const { error } = await sb.from('bids').update({ submitted: true }).in('id', bidIds)
+      if (error) { toast('Erreur soumission : ' + error.message, 'error'); return }
+    }
+  }
+
+  toast(`✅ ${Object.keys(encBasket).length} enchères soumises · Total : ${total.toFixed(1)}M€`, 'success')
+  setTimeout(() => toast('🔒 Enchères verrouillées · Résultats à la fermeture du tour', 'info'), 1500)
+  encBasket = {}
+  encEngaged = 0
+  renderEnchere()
+  renderPanier()
+}
+
+// ══════════════════════════════════════════
+// MODULE : SIMULATEUR GTG — Connecté à Supabase
+// ══════════════════════════════════════════
+let SIM = { min:0, playing:false, speed:1, interval:null, sh:0, sa:0, rh:0, ra:0, gh:0, ga:0, events:[] };
+
+// Compositions par défaut (démo) — remplacées par loadSimMatch() si connecté
+let HOME_ATT = [{n:'Kvaratskhelia',note:9.2},{n:'O. Dembélé',note:8.8},{n:'B. Barcola',note:7.5}];
+let HOME_MID = [{n:'Vitinha',note:8.2},{n:'João Neves',note:8.5},{n:'Zaïre-Emery',note:7.0}];
+let HOME_DEF = [{n:'Hakimi',note:7.5},{n:'Zabarnyi',note:7.2},{n:'Pacho',note:7.0},{n:'N. Mendes',note:7.8}];
+let HOME_GK  = [{n:'Chevalier',note:7.2}];
+let AWAY_ATT = [{n:'Greenwood',note:8.2},{n:'Gouiri',note:7.1}];
+let AWAY_DEF = [{n:'Danso',note:7.0},{n:'Pavard',note:7.3}];
+let AWAY_MID = [{n:'Vermeeren',note:7.5}];
+let AWAY_GK  = [{n:'Rulli',note:6.8}];
+
+let simHomeName  = 'LES INVINCIBLES';
+let simAwayName  = 'DRAGON FC';
+let simJournee   = null;
+let simLoaded    = false;
+let simLoading   = false;
+let simErrorMsg  = null;
+let simIsDemo    = true; // true tant qu'on n'a pas trouvé de vrai match
+
+// Charge le prochain match du coach connecté et ses compositions réelles
+async function loadSimMatch() {
+  if (simLoading) return
+  simLoading = true; simErrorMsg = null
+
+  try {
+    if (!sb)          { simErrorMsg = 'Connexion à la base indisponible — mode démo.'; return }
+    if (!CURRENT_USER) { simErrorMsg = 'Connecte-toi pour voir tes vrais matchs — mode démo.'; return }
+
+    const { data: teams } = await sb.from('teams')
+      .select('id, nom, league_id').eq('coach_id', CURRENT_USER.id).limit(1)
+
+    if (!teams?.length) { simErrorMsg = 'Rejoins une ligue pour accéder à tes matchs — mode démo.'; return }
+    const myTeam = teams[0]
+
+    const { data: matches, error: mErr } = await sb.from('matches')
+      .select('*, home:teams!home_team_id(id,nom), away:teams!away_team_id(id,nom)')
+      .eq('league_id', myTeam.league_id)
+      .or(`home_team_id.eq.${myTeam.id},away_team_id.eq.${myTeam.id}`)
+      .order('journee', { ascending: true })
+
+    if (mErr) { simErrorMsg = 'Erreur chargement calendrier : ' + mErr.message; return }
+
+    const match = (matches || []).find(m => m.statut !== 'termine') || matches?.[0]
+    if (!match) { simErrorMsg = 'Aucun match trouvé (calendrier pas encore généré) — mode démo.'; return }
+
+    const homeTeam = match.home, awayTeam = match.away
+    if (!homeTeam || !awayTeam) { simErrorMsg = 'Équipes du match introuvables — mode démo.'; return }
+
+    const [{ data: homeSquad }, { data: awaySquad }] = await Promise.all([
+      sb.from('squads').select('*, player:players(nom, poste, note_actuelle)').eq('team_id', homeTeam.id),
+      sb.from('squads').select('*, player:players(nom, poste, note_actuelle)').eq('team_id', awayTeam.id)
+    ])
+
+    const byPoste = (squad, poste, n) => (squad || [])
+      .filter(s => s.player?.poste === poste)
+      .sort((a, b) => (b.player.note_actuelle || 6) - (a.player.note_actuelle || 6))
+      .slice(0, n)
+      .map(s => ({ n: s.player.nom, note: s.player.note_actuelle || 6.0 }))
+
+    const withFallback = (arr, label) => arr.length ? arr : [{ n: label, note: 6.0 }]
+
+    HOME_GK  = withFallback(byPoste(homeSquad, 'GK', 1),  'Gardien')
+    HOME_DEF = withFallback(byPoste(homeSquad, 'DEF', 4), 'Défenseur')
+    HOME_MID = withFallback(byPoste(homeSquad, 'MID', 4), 'Milieu')
+    HOME_ATT = withFallback(byPoste(homeSquad, 'ATT', 3), 'Attaquant')
+    AWAY_GK  = withFallback(byPoste(awaySquad, 'GK', 1),  'Gardien')
+    AWAY_DEF = withFallback(byPoste(awaySquad, 'DEF', 4), 'Défenseur')
+    AWAY_MID = withFallback(byPoste(awaySquad, 'MID', 4), 'Milieu')
+    AWAY_ATT = withFallback(byPoste(awaySquad, 'ATT', 3), 'Attaquant')
+
+    simHomeName = homeTeam.nom.toUpperCase()
+    simAwayName = awayTeam.nom.toUpperCase()
+    simJournee  = match.journee
+    simIsDemo   = false
+
+    if (!homeSquad?.length && !awaySquad?.length) {
+      simErrorMsg = 'Aucune des deux équipes n\'a d\'effectif — compositions génériques utilisées.'
+    }
+  } catch (e) {
+    simErrorMsg = 'Erreur inattendue : ' + (e?.message || e)
+  } finally {
+    simLoaded = true; simLoading = false
+    renderSimHeader()
+  }
+}
+
+function renderSimHeader() {
+  const h = document.getElementById('sim-home-name')
+  const a = document.getElementById('sim-away-name')
+  const j = document.getElementById('sim-journee-label')
+  const banner = document.getElementById('sim-status-banner')
+  if (h) h.textContent = simHomeName
+  if (a) a.textContent = simAwayName
+  if (j) j.textContent = simJournee ? `JOURNÉE ${simJournee}` : ''
+  if (banner) {
+    if (simIsDemo) {
+      banner.style.display = 'block'
+      banner.textContent = '🎮 ' + (simErrorMsg || 'Mode démo — connecte-toi et rejoins une ligue pour simuler ton vrai match.')
+    } else {
+      banner.style.display = simErrorMsg ? 'block' : 'none'
+      banner.textContent = simErrorMsg || ''
+    }
+  }
+}
+
+function avgNote(arr) { return arr.reduce((s,p)=>s+p.note,0)/Math.max(1,arr.length); }
+
+function genSimEvents() {
+  const evs = [];
+  HOME_ATT.forEach(att => {
+    const min = Math.floor(Math.random()*85)+1;
+    if (Math.random()<0.4) { evs.push({min,type:'goal_real',pl:att,side:'home'}); return; }
+    let note = att.note, steps=[], ok=true;
+    const midA=avgNote(AWAY_MID), defA=avgNote(AWAY_DEF), gkA=avgNote(AWAY_GK);
+    const p1=note>=midA; steps.push({l:'MID',a:+note.toFixed(1),d:+midA.toFixed(1),p:p1});
+    if(!p1){ok=false;}else{
+      note-=0; const p2=note>=defA; steps.push({l:'DEF',a:+note.toFixed(1),d:+defA.toFixed(1),p:p2});
+      if(!p2){ok=false;}else{
+        note-=0.5; const p3=note>=gkA; steps.push({l:'GK',a:+note.toFixed(1),d:+gkA.toFixed(1),p:p3});
+        if(!p3)ok=false;
+      }
+    }
+    evs.push({min,type:'duel',pl:att,steps,goal:ok,side:'home'});
+  });
+  AWAY_ATT.forEach(att => {
+    if(Math.random()<0.25) { evs.push({min:Math.floor(Math.random()*85)+1,type:'goal_real',pl:att,side:'away'}); return; }
+    let note=att.note, steps=[], ok=true;
+    const midH=avgNote(HOME_MID), defH=avgNote(HOME_DEF), gkH=avgNote(HOME_GK);
+    const p1=note>midH; steps.push({l:'MID',a:+note.toFixed(1),d:+midH.toFixed(1),p:p1});
+    if(!p1){ok=false;}else{
+      note-=0.5; const p2=note>defH; steps.push({l:'DEF',a:+note.toFixed(1),d:+defH.toFixed(1),p:p2});
+      if(!p2){ok=false;}else{
+        note-=0.5; const p3=note>gkH; steps.push({l:'GK',a:+note.toFixed(1),d:+gkH.toFixed(1),p:p3});
+        if(!p3)ok=false;
+      }
+    }
+    evs.push({min:Math.floor(Math.random()*85)+1,type:'duel',pl:att,steps,goal:ok,side:'away'});
+  });
+  evs.push({min:45,type:'ht'});
+  return evs.sort((a,b)=>a.min-b.min);
+}
+
+function toggleSim() {
+  if (SIM.min===0 && !SIM.playing) {
+    SIM.events = genSimEvents();
+    toast('⚽ Coup d\'envoi !','success');
+  }
+  SIM.playing = !SIM.playing;
+  const btn = document.getElementById('sim-play-btn');
+  if (SIM.playing) {
+    btn.textContent = '⏸ PAUSE'; btn.className = 'btn btn-red btn-sm';
+    SIM.interval = setInterval(() => { if(SIM.playing) stepSim(); }, Math.max(50, 1000/SIM.speed));
+  } else {
+    btn.textContent = '▶ REPRENDRE'; btn.className = 'btn btn-outline btn-sm';
+    clearInterval(SIM.interval);
+  }
+}
+
+function setSimSpeed(s,el) {
+  SIM.speed=s;
+  if(SIM.playing){ clearInterval(SIM.interval); SIM.interval=setInterval(()=>{if(SIM.playing)stepSim();},Math.max(50,1000/s)); }
+}
+
+function stepSim() {
+  if (SIM.min >= 90) { endSim(); return; }
+  SIM.min++;
+  const pct = SIM.min/90*100;
+  const bar = document.getElementById('sim-bar'); if(bar) bar.style.width=pct+'%';
+  const min = document.getElementById('sim-min'); if(min) min.textContent=`${SIM.min}' / 90'`;
+  SIM.events.filter(e=>e.min===SIM.min).forEach(e=>processSimEvent(e));
+  updateSimScore();
+}
+
+function processSimEvent(e) {
+  const feed = document.getElementById('sim-feed');
+  const add = (type,ico,title,detail) => {
+    const el=document.createElement('div');
+    el.style.cssText=`display:flex;align-items:flex-start;gap:7px;padding:7px 10px;border:1px solid var(--border);background:${type==='goal'?'rgba(200,160,32,.1)':type==='goal-real'?'rgba(26,238,106,.08)':'var(--ink-3)'};margin-bottom:3px;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,0 100%);animation:evIn .2s ease;`;
+    el.innerHTML=`<span style="font-family:var(--f-mono);font-size:10px;color:var(--muted);width:22px;flex-shrink:0;margin-top:2px">${e.min}'</span><span style="font-size:15px">${ico}</span><div><div style="font-family:var(--f-disp);font-size:12px;letter-spacing:1px">${title}</div>${detail?`<div style="font-size:10px;color:var(--muted);margin-top:1px">${detail}</div>`:''}</div>`;
+    feed.insertBefore(el, feed.firstChild);
+  };
+  if(e.type==='goal_real'){
+    if(e.side==='home'){SIM.sh++;SIM.rh++;}else{SIM.sa++;SIM.ra++;}
+    add('goal-real','⚽',`BUT RÉEL · ${e.pl.n}`,`${e.side==='home'?simHomeName:simAwayName} · ${SIM.sh}–${SIM.sa}`);
+  } else if(e.type==='duel'){
+    if(e.goal){
+      if(e.side==='home'){SIM.sh++;SIM.gh++;}else{SIM.sa++;SIM.ga++;}
+      add('goal','⚡',`BUT GTG · ${e.pl.n}`,e.steps.map(s=>`${s.l}: ${s.a} vs ${s.d} ${s.p?'✓':'✗'}`).join(' → '));
+      showDuel(e);
+    } else {
+      add('','🛡',`Duel stoppé · ${e.pl.n}`,e.steps.map(s=>`${s.l}: ${s.a} vs ${s.d}`).join(' → '));
+      showDuel(e);
+    }
+  } else if(e.type==='ht'){
+    add('','⏸','MI-TEMPS',`Score : ${SIM.sh}–${SIM.sa}`);
+  }
+}
+
+function showDuel(e) {
+  const el=document.getElementById('sim-duel');
+  if(!el)return;
+  el.innerHTML=`<div style="font-family:var(--f-disp);font-size:13px;letter-spacing:1px;margin-bottom:6px">${e.pl.n} (${e.pl.note}) → ${e.goal?'<span style="color:#22dd50">BUT GTG ⚡</span>':'<span style="color:var(--red)">STOPPÉ 🛡</span>'}</div>`+
+  e.steps.map(s=>`<div style="display:flex;align-items:center;gap:8px;padding:5px 8px;margin-bottom:3px;background:${s.p?'rgba(26,238,106,.08)':'rgba(255,26,46,.08)'};border:1px solid ${s.p?'rgba(26,238,106,.2)':'rgba(255,26,46,.2)'};">
+    <span style="font-family:var(--f-disp);font-size:10px;letter-spacing:1px;color:var(--muted);width:26px">${s.l}</span>
+    <span style="font-family:var(--f-mono);font-size:13px;color:var(--gold-hi)">${s.a}</span>
+    <span style="color:var(--muted);font-size:11px">vs ${s.d}</span>
+    <span style="margin-left:auto;font-weight:700;font-size:13px;color:${s.p?'#22dd50':'var(--red)'}">${s.p?'✓':'✗'}</span>
+  </div>`).join('');
+}
+
+function updateSimScore() {
+  document.getElementById('sim-sh').textContent=SIM.sh;
+  document.getElementById('sim-sa').textContent=SIM.sa;
+  document.getElementById('sim-real').textContent=`${SIM.rh}–${SIM.ra}`;
+  document.getElementById('sim-gtg').textContent=`${SIM.gh}–${SIM.ga}`;
+  const s=document.getElementById('sim-stats');
+  if(s) s.innerHTML=`
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--muted)">Score total</span><span style="font-family:var(--f-mono)">${SIM.sh}–${SIM.sa}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--muted)">Buts réels</span><span style="font-family:var(--f-mono)">${SIM.rh}–${SIM.ra}</span></div>
+    <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px"><span style="color:var(--muted)">Buts GTG</span><span style="font-family:var(--f-mono)">${SIM.gh}–${SIM.ga}</span></div>`;
+}
+
+function endSim() {
+  SIM.playing=false; clearInterval(SIM.interval);
+  const btn=document.getElementById('sim-play-btn');
+  btn.textContent='▶ REJOUER'; btn.className='btn btn-outline btn-sm';
+  const winner=SIM.sh>SIM.sa?`🏆 ${simHomeName} gagne`:SIM.sa>SIM.sh?`🏆 ${simAwayName} gagne`:'🤝 Match nul';
+  toast(`FT : ${simHomeName} ${SIM.sh} – ${SIM.sa} ${simAwayName} · ${winner}`,'success');
+  setTimeout(()=>{SIM={min:0,playing:false,speed:1,interval:null,sh:0,sa:0,rh:0,ra:0,gh:0,ga:0,events:[]};},500);
+}
+
+// ══════════════════════════════════════════
+// MODULE : LIGUE
+// ══════════════════════════════════════════
+function showLigueScreen(id) {
+  ['home','create','join','mpg','claim'].forEach(s=>{
+    const el=document.getElementById('ligue-'+s);
+    if(el) el.style.display = s===id ? 'block':'none';
+  });
+  if (id === 'mpg') resetMpgImport();
+}
+
+let currentNbJoueurs = 8
+
+function selectNb(n, el) {
+  currentNbJoueurs = n
+  document.querySelectorAll('.nb-opt').forEach(d=>{d.style.borderColor='var(--border-2)';d.style.color='var(--muted)';d.style.background='var(--ink-3)';});
+  el.style.borderColor='var(--gold)'; el.style.color='var(--gold-hi)'; el.style.background='var(--gold-dim)';
+  if (mpgBudgetMode) renderMpgBudgetRows()
+}
+
+function showInviteCode(code) {
+  const link = getInviteLink(code)
+  const codeEl = document.querySelector('[onclick*="GTG-4X8K2"]')
+  if (codeEl) {
+    codeEl.innerHTML = `
+      <div style="font-family:var(--f-mono);font-size:36px;letter-spacing:8px;color:var(--gold-hi);">${code}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:4px;">Cliquer pour copier le lien</div>`
+    codeEl.onclick = () => copyCode(code)
+  }
+}
+
+// ══════════════════════════════════════════
+// MODULE : IMPORT ÉQUIPE MPG (capture d'écran → Claude Vision → validation manuelle)
+// ══════════════════════════════════════════
+let mpgImageBase64 = null
+let mpgMediaType   = null
+let mpgExtracted   = []   // [{nom, poste, valeur, match, include}]
+let mpgMatchPool   = []   // joueurs de la base GTG disponibles pour la correspondance
+
+function resetMpgImport() {
+  mpgImageBase64 = null
+  mpgMediaType   = null
+  mpgExtracted   = []
+  const fileInput = document.getElementById('mpg-file-input')
+  if (fileInput) fileInput.value = ''
+  const preview = document.getElementById('mpg-preview'); if (preview) preview.style.display = 'none'
+  const loading = document.getElementById('mpg-loading'); if (loading) loading.style.display = 'none'
+  const err     = document.getElementById('mpg-error');   if (err) err.style.display = 'none'
+  const up      = document.getElementById('mpg-step-upload');   if (up) up.style.display = 'block'
+  const val     = document.getElementById('mpg-step-validate'); if (val) val.style.display = 'none'
+}
+
+function onMpgFileSelected(input) {
+  const file = input.files?.[0]
+  if (!file) return
+  const allowed = ['image/png', 'image/jpeg', 'image/webp']
+  if (!allowed.includes(file.type)) { toast('Format non supporté (PNG, JPEG ou WEBP)', 'error'); return }
+  if (file.size > 8 * 1024 * 1024) { toast('Image trop lourde (8 Mo max)', 'error'); return }
+
+  mpgMediaType = file.type
+  const reader = new FileReader()
+  reader.onload = () => {
+    const dataUrl = reader.result
+    mpgImageBase64 = dataUrl.split(',')[1]
+    document.getElementById('mpg-preview-img').src = dataUrl
+    document.getElementById('mpg-preview').style.display = 'block'
+    document.getElementById('mpg-error').style.display = 'none'
+  }
+  reader.readAsDataURL(file)
+}
+
+async function analyzeMpgScreenshot() {
+  if (!mpgImageBase64) return
+  document.getElementById('mpg-preview').style.display = 'none'
+  document.getElementById('mpg-loading').style.display = 'block'
+  document.getElementById('mpg-error').style.display = 'none'
+
+  try {
+    const resp = await fetch('/.netlify/functions/mpg-import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image_base64: mpgImageBase64, media_type: mpgMediaType })
+    })
+    const data = await resp.json().catch(() => ({}))
+    if (!resp.ok || data.error) throw new Error(data.error || `Erreur serveur (${resp.status})`)
+    if (!data.players?.length) throw new Error('Aucun joueur détecté sur cette capture.')
+
+    mpgExtracted = data.players.map(p => ({ ...p, match: null, include: true }))
+    await loadMpgMatchPool()
+    autoMatchMpgPlayers()
+    renderMpgRows()
+
+    document.getElementById('mpg-loading').style.display = 'none'
+    document.getElementById('mpg-step-upload').style.display = 'none'
+    document.getElementById('mpg-step-validate').style.display = 'block'
+  } catch (e) {
+    document.getElementById('mpg-loading').style.display = 'none'
+    document.getElementById('mpg-preview').style.display = 'block'
+    const errEl = document.getElementById('mpg-error')
+    errEl.style.display = 'block'
+    errEl.textContent = '⚠️ ' + (e?.message || e)
+  }
+}
+
+// Récupère les joueurs GTG disponibles pour la correspondance manuelle
+async function loadMpgMatchPool() {
+  if (tmLoaded && TM_PLAYERS.length) { mpgMatchPool = TM_PLAYERS; return }
+  if (!sb) { mpgMatchPool = []; return }
+  const { data } = await sb.from('players').select('id, nom, club, poste').eq('actif', true)
+  mpgMatchPool = (data || []).map(p => ({ id: p.id, n: p.nom, c: p.club, p: p.poste }))
+}
+
+function normalizeMpgName(s) {
+  return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z\s]/g, '').trim()
+}
+
+// Clubs MPG affichés en abrégé/variante → alias vers les noms de clubs GTG (players.club)
+const CLUB_ALIASES = {
+  'paris': ['psg', 'paris', 'paris sg', 'paris saint-germain'],
+  'marseille': ['om', 'marseille'],
+  'lyon': ['ol', 'lyon', 'olympique lyonnais'],
+  'lille': ['losc', 'lille'],
+  'lens': ['lens', 'rc lens'],
+  'monaco': ['monaco', 'as monaco'],
+  'rennes': ['rennes'],
+  'nice': ['nice', 'ogc nice'],
+  'strasbourg': ['strasbourg'],
+  'toulouse': ['toulouse'],
+  'brest': ['brest'],
+  'lorient': ['lorient'],
+  'angers': ['angers'],
+  'nantes': ['nantes'],
+  'le havre': ['le havre', 'havre'],
+  'auxerre': ['auxerre'],
+  'metz': ['metz'],
+  'paris fc': ['paris fc'],
+}
+function clubsMatch(mpgClub, gtgClub) {
+  if (!mpgClub || !gtgClub) return false
+  const a = normalizeMpgName(mpgClub), b = normalizeMpgName(gtgClub)
+  if (a === b || a.includes(b) || b.includes(a)) return true
+  for (const aliases of Object.values(CLUB_ALIASES)) {
+    const norm = aliases.map(normalizeMpgName)
+    if (norm.some(x => x === a || a.includes(x)) && norm.some(x => x === b || b.includes(x))) return true
+  }
+  return false
+}
+
+// Pré-sélectionne une correspondance probable — reste modifiable manuellement (validation obligatoire)
+function autoMatchMpgPlayers() {
+  mpgExtracted.forEach(row => {
+    const target = normalizeMpgName(row.nom)
+    const targetParts = target.split(/\s+/).filter(Boolean)
+    let best = null, bestScore = 0
+    mpgMatchPool.forEach(cand => {
+      const cn = normalizeMpgName(cand.n)
+      let score = 0
+      if (cn === target) score = 100
+      else if (cn.includes(target) || target.includes(cn)) score = 70
+      else {
+        const cParts = cn.split(/\s+/).filter(Boolean)
+        const overlap = targetParts.filter(t => cParts.some(c => c === t || c.includes(t) || t.includes(c))).length
+        score = overlap * 20
+      }
+      if (row.poste && cand.p === row.poste) score += 5
+      if (clubsMatch(row.club, cand.c)) score += 15
+      if (score > bestScore) { bestScore = score; best = cand }
+    })
+    row.match = bestScore >= 20 ? best : null
+  })
+}
+
+function renderMpgRows() {
+  const el = document.getElementById('mpg-rows')
+  if (!el) return
+  document.getElementById('mpg-count').textContent = mpgExtracted.filter(r => r.include).length
+  const total = mpgExtracted.filter(r => r.include).reduce((s, r) => s + (parseFloat(r.valeur) || 0), 0)
+  document.getElementById('mpg-total').textContent = total.toFixed(1) + 'M€'
+
+  el.innerHTML = mpgExtracted.map((row, i) => {
+    const options = mpgMatchPool.map(c =>
+      `<option value="${c.id}" ${row.match?.id === c.id ? 'selected' : ''}>${c.n} · ${c.c} (${c.p})</option>`
+    ).join('')
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;flex-wrap:wrap;background:${row.include ? 'var(--ink-3)' : 'rgba(255,26,46,.05)'};border:1.5px solid ${row.include ? 'var(--border)' : 'rgba(255,26,46,.2)'};">
+      <input type="checkbox" ${row.include ? 'checked' : ''} onchange="toggleMpgRow(${i}, this.checked)">
+      <div style="flex:1;min-width:110px;">
+        <div style="font-family:var(--f-disp);font-size:12px;letter-spacing:1px;">${row.nom}</div>
+        <div style="font-size:9px;color:var(--muted);">${row.club ? row.club + ' · ' : ''}Détecté : ${row.poste}${row.match ? '' : ' · pas de correspondance'}</div>
+      </div>
+      <select style="flex:1;min-width:170px;background:var(--ink-2);border:1px solid var(--border-2);color:var(--text);font-size:11px;padding:5px;" onchange="setMpgMatch(${i}, this.value)">
+        <option value="">— Aucune correspondance (ignorer) —</option>
+        ${options}
+      </select>
+      <input type="number" step="0.1" value="${row.valeur ?? ''}" placeholder="M€" style="width:70px;background:var(--ink-2);border:1px solid var(--border-2);color:var(--gold-hi);font-family:var(--f-mono);text-align:center;padding:5px;" onchange="setMpgValeur(${i}, this.value)">
+      <span style="font-size:10px;color:var(--muted);">M€</span>
+    </div>`
+  }).join('')
+}
+
+function toggleMpgRow(i, checked) { mpgExtracted[i].include = checked; renderMpgRows() }
+function setMpgValeur(i, val) { mpgExtracted[i].valeur = parseFloat(val) || 0; renderMpgRows() }
+function setMpgMatch(i, playerId) {
+  mpgExtracted[i].match = mpgMatchPool.find(c => c.id === playerId) || null
+  if (!playerId) mpgExtracted[i].include = false
+  renderMpgRows()
+}
+
+async function confirmMpgImport() {
+  if (!sb || !CURRENT_USER) { toast('Connecte-toi pour importer ton équipe', 'error'); return }
+
+  const rows = mpgExtracted.filter(r => r.include && r.match)
+  if (!rows.length) { toast('Aucun joueur validé avec correspondance', 'error'); return }
+
+  const { data: teams } = await sb.from('teams').select('id, budget, league_id').eq('coach_id', CURRENT_USER.id).limit(1)
+  if (!teams?.length) { toast('Rejoins ou crée une ligue avant d\'importer', 'error'); return }
+  const team = teams[0]
+
+  // Vérifier les conflits : joueur déjà dans une équipe de cette ligue
+  const { data: existing } = await sb.from('squads')
+    .select('player_id, team_id')
+    .eq('league_id', team.league_id)
+    .in('player_id', rows.map(r => r.match.id))
+
+  const takenByOthers = (existing || []).filter(e => e.team_id !== team.id).map(e => e.player_id)
+  const alreadyMine   = new Set((existing || []).filter(e => e.team_id === team.id).map(e => e.player_id))
+  const takenSet = new Set(takenByOthers)
+
+  if (takenByOthers.length) {
+    const names = rows.filter(r => takenSet.has(r.match.id)).map(r => r.match.n).join(', ')
+    toast(`⚠️ Déjà pris par un autre coach dans cette ligue : ${names}`, 'error')
+  }
+
+  const finalRows = rows.filter(r => !takenSet.has(r.match.id) && !alreadyMine.has(r.match.id))
+  if (!finalRows.length) { toast('Aucun joueur restant à importer (déjà pris ou déjà dans ton équipe)', 'error'); return }
+
+  const total = finalRows.reduce((s, r) => s + (parseFloat(r.valeur) || 0), 0)
+  const totalCentimes = Math.round(total * 1e9)
+
+  if (totalCentimes > team.budget) {
+    const proceed = confirm(`Le total (${total.toFixed(1)}M€) dépasse ton budget restant (${Math.round(team.budget/1e9)}M€). Importer quand même ?`)
+    if (!proceed) return
+  }
+
+  const inserts = finalRows.map(r => ({
+    team_id:    team.id,
+    player_id:  r.match.id,
+    league_id:  team.league_id,
+    prix_achat: Math.round((parseFloat(r.valeur) || 0) * 1e9),
+    titulaire:  true
+  }))
+
+  const { error: insErr } = await sb.from('squads').insert(inserts)
+  if (insErr) { toast('Erreur import : ' + insErr.message, 'error'); return }
+
+  const newBudget = Math.max(0, team.budget - totalCentimes)
+  await sb.from('teams').update({ budget: newBudget }).eq('id', team.id)
+
+  toast(`✅ ${finalRows.length} joueurs importés · ${total.toFixed(1)}M€ déduits du budget`, 'success')
+  resetMpgImport()
+  showLigueScreen('home')
+  loadDashboard()
+}
+
+// ══════════════════════════════════════════
+// MODULE : IA COACH
+// ══════════════════════════════════════════
+const AI_CONTEXT = `Tu es l'IA Coach GTG (Gold to Goat), fantasy football Ligue 1.
+Règles : Budget 350M€, 3 tours enchères cachées, duels GTG MID→DEF→GK, catenaccio DEF×4, GOAT=2.5.
+Équipe du coach : Les Invincibles FC, 4-3-3 PSG, budget 278M€, 1er au classement.
+Réponds en français, concis, expert, conseils actionnables.`;
+let aiHistory = [];
+let aiInitDone = false;
+
+function initAIChat() {
+  if (aiInitDone) return;
+  aiInitDone = true;
+  addAIMsg('bot', '👋 Bonjour Coach ! Je suis ton IA Coach GTG, propulsée par Claude.<br><br>Je connais ton effectif, ton budget (278M€), ton classement (1er, 187 pts) et les règles GTG complètes. Comment puis-je t\'aider ?');
+}
+
+function addAIMsg(role, html) {
+  const chat = document.getElementById('ai-chat');
+  if (!chat) return;
+  const el = document.createElement('div');
+  el.style.cssText=`padding:10px 14px;border:1px solid ${role==='bot'?'var(--gold-b)':'var(--border)'};background:${role==='bot'?'var(--gold-dim)':'var(--ink-3)'};font-size:13px;line-height:1.7;border-left:3px solid ${role==='bot'?'var(--gold)':'var(--cyan)'};animation:fadeIn .2s ease;`;
+  el.innerHTML = html.replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');
+  chat.appendChild(el);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+async function sendAI() {
+  const input = document.getElementById('ai-input');
+  const msg = input?.value?.trim();
+  if (!msg) return;
+  input.value = '';
+  addAIMsg('user', msg);
+  const thinking = document.createElement('div');
+  thinking.id='ai-thinking';
+  thinking.style.cssText='padding:10px 14px;border:1px solid var(--border);background:var(--ink-3);font-size:13px;color:var(--muted);font-style:italic;';
+  thinking.textContent='⏳ Analyse en cours…';
+  document.getElementById('ai-chat')?.appendChild(thinking);
+  aiHistory.push({role:'user',content:msg});
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:AI_CONTEXT,messages:aiHistory})
+    });
+    const data = await resp.json();
+    document.getElementById('ai-thinking')?.remove();
+    const reply = data?.content?.[0]?.text || 'Désolé, erreur de connexion.';
+    addAIMsg('bot', reply);
+    aiHistory.push({role:'assistant',content:reply});
+    if(aiHistory.length>20) aiHistory=aiHistory.slice(-20);
+  } catch(e) {
+    document.getElementById('ai-thinking')?.remove();
+    addAIMsg('bot','❌ Erreur de connexion à l\'API Claude. Vérifie ta connexion.');
+  }
+}
+
+function askAI(q) {
+  const input = document.getElementById('ai-input');
+  if(input){input.value=q;sendAI();}
+}
+
+// ══════════════════════════════════════════
+// MODULE : ADMIN — GESTION JOUEURS
+// ══════════════════════════════════════════
+
+// Email admin autorisé
+const ADMIN_EMAIL = 'bdo77500@gmail.com'
+
+function isAdmin() {
+  return CURRENT_USER?.email === ADMIN_EMAIL
+}
+
+function gotoAdmin(el) {
+  if (!isAdmin()) { toast('Accès réservé à l\'admin', 'error'); return }
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'))
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'))
+  document.getElementById('page-admin').style.display = ''
+  document.getElementById('page-admin').classList.add('active')
+  el?.classList.add('active')
+  document.getElementById('topbar-page').textContent = 'ADMIN · JOUEURS'
+  renderAdminPlayers()
+}
+
+// Afficher le bouton admin si connecté en tant qu'admin
+function checkAdminAccess() {
+  const navAdmin = document.getElementById('nav-admin')
+  if (navAdmin) navAdmin.style.display = isAdmin() ? '' : 'none'
+}
+
+let adminPlayers = []
+
+async function renderAdminPlayers() {
+  if (!sb) return
+  const q   = document.getElementById('admin-search')?.value?.toLowerCase() || ''
+  const club = document.getElementById('admin-club')?.value || ''
+  const pos  = document.getElementById('admin-pos')?.value || ''
+
+  let query = sb.from('players').select('*').order('club').order('poste').order('cote_tm', { ascending: false })
+  if (club) query = query.eq('club', club)
+  if (pos)  query = query.eq('poste', pos)
+
+  const { data } = await query
+  adminPlayers = data || []
+
+  const filtered = adminPlayers.filter(p =>
+    !q || p.nom.toLowerCase().includes(q) || p.club.toLowerCase().includes(q)
+  )
+
+  const tbody = document.getElementById('admin-tbody')
+  const count = document.getElementById('admin-count')
+  if (!tbody) return
+
+  const POS_COLORS = {GK:'var(--gold)',DEF:'#00ccff',MID:'#aa64ff',ATT:'var(--red)'}
+
+  tbody.innerHTML = filtered.map(p => `
+    <tr style="border-bottom:1px solid var(--border);" onmouseover="this.style.background='rgba(200,160,32,.03)'" onmouseout="this.style.background=''">
+      <td style="padding:8px 12px;font-family:var(--f-disp);font-size:13px;">${p.nom}</td>
+      <td style="padding:8px 12px;font-size:12px;color:var(--muted);">${p.club}</td>
+      <td style="padding:8px 12px;"><span style="font-size:9px;letter-spacing:1px;padding:2px 6px;border:1px solid ${POS_COLORS[p.poste]||'var(--border)'};color:${POS_COLORS[p.poste]||'var(--muted)'};">${p.poste}</span></td>
+      <td style="padding:8px 12px;font-family:var(--f-mono);font-size:13px;color:var(--gold-hi);">${Math.round((p.cote_tm||0)/1e6)}M€</td>
+      <td style="padding:8px 12px;font-family:var(--f-mono);font-size:13px;color:${(p.note_actuelle||0)>=7.5?'#22dd50':(p.note_actuelle||0)>=6.5?'var(--gold-hi)':'var(--muted)'};">${p.note_actuelle||'-'}</td>
+      <td style="padding:8px 12px;display:flex;gap:6px;">
+        <button class="btn btn-outline btn-sm" onclick="editPlayer('${p.id}')">✏️</button>
+        <button class="btn btn-outline btn-sm" style="color:var(--red)" onclick="deletePlayer('${p.id}','${p.nom}')">🗑</button>
+      </td>
+    </tr>`).join('')
+
+  if (count) count.textContent = `${filtered.length} joueur${filtered.length>1?'s':''}`
+}
+
+function openAddPlayer() {
+  document.getElementById('admin-player-id').value = ''
+  document.getElementById('admin-modal-title').textContent = 'AJOUTER UN JOUEUR'
+  document.getElementById('ap-nom').value = ''
+  document.getElementById('ap-club').value = 'PSG'
+  document.getElementById('ap-poste').value = 'ATT'
+  document.getElementById('ap-cote').value = ''
+  document.getElementById('ap-note').value = ''
+  document.getElementById('ap-nat').value = ''
+  document.getElementById('admin-modal').style.display = 'flex'
+}
+
+function editPlayer(id) {
+  const p = adminPlayers.find(x => x.id === id)
+  if (!p) return
+  document.getElementById('admin-player-id').value = id
+  document.getElementById('admin-modal-title').textContent = 'MODIFIER · ' + p.nom
+  document.getElementById('ap-nom').value = p.nom
+  document.getElementById('ap-club').value = p.club
+  document.getElementById('ap-poste').value = p.poste
+  document.getElementById('ap-cote').value = Math.round((p.cote_tm||0)/1e6)
+  document.getElementById('ap-note').value = p.note_actuelle || ''
+  document.getElementById('ap-nat').value = p.nationalite || ''
+  document.getElementById('admin-modal').style.display = 'flex'
+}
+
+function closeAdminModal() {
+  document.getElementById('admin-modal').style.display = 'none'
+}
+
+async function savePlayer() {
+  const id    = document.getElementById('admin-player-id').value
+  const nom   = document.getElementById('ap-nom').value.trim()
+  const club  = document.getElementById('ap-club').value
+  const poste = document.getElementById('ap-poste').value
+  const cote  = parseFloat(document.getElementById('ap-cote').value) * 1e6
+  const note  = parseFloat(document.getElementById('ap-note').value)
+  const nat   = document.getElementById('ap-nat').value.trim()
+
+  if (!nom || !cote) { toast('Remplis nom et cote', 'error'); return }
+
+  const payload = { nom, club, poste, cote_tm: cote, note_actuelle: note || null, nationalite: nat || null }
+
+  try {
+    if (id) {
+      const { error } = await sb.from('players').update(payload).eq('id', id)
+      if (error) throw error
+      toast('✅ Joueur modifié !', 'success')
+    } else {
+      const { error } = await sb.from('players').insert(payload)
+      if (error) throw error
+      toast('✅ Joueur ajouté !', 'success')
+    }
+    closeAdminModal()
+    renderAdminPlayers()
+    renderDB()
+  } catch(e) {
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+
+async function deletePlayer(id, nom) {
+  if (!confirm(`Supprimer ${nom} ?`)) return
+  try {
+    const { error } = await sb.from('players').delete().eq('id', id)
+    if (error) throw error
+    toast(`🗑 ${nom} supprimé`, 'info')
+    renderAdminPlayers()
+    renderDB()
+  } catch(e) {
+    toast('Erreur : ' + e.message, 'error')
+  }
+}
+const style = document.createElement('style');
+style.textContent='@keyframes evIn{from{transform:translateX(-6px);opacity:0}to{transform:none;opacity:1}} @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}';
+document.head.appendChild(style);
+
+// ══════════════════════════════════════════
+// PWA — Désactiver Service Worker en dev
+// ══════════════════════════════════════════
+
+// Désinstaller tous les Service Workers existants
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(reg => reg.unregister())
+  })
+}
+
+// Prompt d'installation personnalisé
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Afficher la bannière d'installation après 3 secondes
+  setTimeout(showInstallBanner, 3000);
+});
+
+function showInstallBanner() {
+  if (!deferredPrompt) return;
+  // Ne pas afficher si déjà installé
+  if (window.matchMedia('(display-mode: standalone)').matches) return;
+
+  const banner = document.createElement('div');
+  banner.id = 'install-banner';
+  banner.style.cssText = `
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:#0d0d14;border:2px solid #c8a020;
+    padding:14px 20px;z-index:9999;
+    display:flex;align-items:center;gap:14px;
+    box-shadow:4px 4px 0 rgba(200,160,32,.3);
+    animation:slideUp .3s ease;min-width:300px;max-width:380px;
+    clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,0 100%);
+  `;
+  banner.innerHTML = `
+    <svg width="36" height="36" viewBox="0 0 300 280">
+      <defs><linearGradient id="tgb" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#ffe080"/><stop offset="100%" stop-color="#5a3800"/></linearGradient></defs>
+      <polygon points="150,20 248,78 248,202 150,260 52,202 52,78" fill="#080808" stroke="#c8a020" stroke-width="8"/>
+      <path d="M118,82 L76,82 L76,148 L118,148 L118,122 L98,122 L98,114 L118,114" fill="none" stroke="#c8a020" stroke-width="10" stroke-linecap="square"/>
+      <path d="M182,82 L224,82 L224,148 L182,148 L182,122 L202,122 L202,114 L182,114" fill="none" stroke="#c8a020" stroke-width="10" stroke-linecap="square"/>
+      <rect x="136" y="10" width="28" height="258" fill="url(#tgb)"/>
+      <rect x="112" y="10" width="76" height="22" fill="url(#tgb)"/>
+    </svg>
+    <div style="flex:1">
+      <div style="font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:2px;color:#f5c842">INSTALLER GTG</div>
+      <div style="font-size:11px;color:#50507a;margin-top:2px">Jouer comme une vraie app</div>
+    </div>
+    <button onclick="installPWA()" style="background:#c8a020;border:none;color:#000;font-family:'Oswald',sans-serif;font-size:12px;letter-spacing:2px;padding:7px 14px;cursor:pointer;clip-path:polygon(0 0,calc(100% - 5px) 0,100% 5px,100% 100%,0 100%)">INSTALLER</button>
+    <button onclick="document.getElementById('install-banner').remove()" style="background:none;border:none;color:#50507a;font-size:18px;cursor:pointer;padding:0 4px;">✕</button>
+  `;
+
+  const styleEl = document.createElement('style');
+  styleEl.textContent = '@keyframes slideUp{from{transform:translateX(-50%) translateY(20px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}';
+  document.head.appendChild(styleEl);
+  document.body.appendChild(banner);
+}
+
+async function installPWA() {
+  if (!deferredPrompt) return;
+  deferredPrompt.prompt();
+  const { outcome } = await deferredPrompt.userChoice;
+  if (outcome === 'accepted') {
+    toast('✅ GTG installé sur ton téléphone !', 'success');
+  }
+  deferredPrompt = null;
+  document.getElementById('install-banner')?.remove();
+}
+
+// Détecter si déjà installé en standalone
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  console.log('[GTG PWA] Mode standalone — app installée');
+}
+</script>
+</body>
+</html>
