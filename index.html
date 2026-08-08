@@ -1132,6 +1132,20 @@ body::after {
 ══════════════════════════════════ -->
 <div id="page-dashboard" class="page active">
 
+  <!-- MES LIGUES — page de garde : vue d'ensemble + créer/rejoindre -->
+  <div class="panel cut" style="padding:16px;margin-bottom:16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px;">
+      <div class="panel-label" style="margin:0;">MES LIGUES</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="goto('ligue', document.querySelector('.nav-item[title=Ligue]')); showLigueScreen('join')" title="Rejoindre une ligue">🔗 REJOINDRE</button>
+        <button class="btn btn-gold btn-sm" onclick="goto('ligue', document.querySelector('.nav-item[title=Ligue]')); showLigueScreen('create')" title="Créer une ligue">+ CRÉER</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;" id="dash-ligue-list">
+      <div style="color:var(--muted);font-size:12px;padding:14px;text-align:center;">Chargement…</div>
+    </div>
+  </div>
+
   <div class="hero-panel" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
     <div>
       <div style="font-family:var(--f-disp);font-size:11px;letter-spacing:4px;color:var(--muted);margin-bottom:6px;">SAISON 2025/26 · LIGUE 1</div>
@@ -1959,8 +1973,8 @@ body::after {
 // ══════════════════════════════════════════
 // SUPABASE — Configuration & Auth
 // ══════════════════════════════════════════
-const SB_URL = 'https://jxvveosaqztsadkqdfiz.supabase.co'
-const SB_KEY = 'sb_publishable_AwXU7t6yjj5p56Qj-4jZ6A_Y-cznsXq'
+const SB_URL = 'https://jajkpalrjujnptjrcqwx.supabase.co'
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImphamtwYWxyanVqbnB0anJjcXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkyODk3MjIsImV4cCI6MjA5NDg2NTcyMn0.QVfY7pTZU0SSWZI_uX918E2ai_-FemGY_rGrRqS_i2g'
 let sb = null
 let CURRENT_USER = null
 let CURRENT_PROFILE = null
@@ -2051,6 +2065,7 @@ async function loadDashboard() {
       if (nameEl) nameEl.innerHTML = `<em>${pseudo.toUpperCase()}</em>`
       if (subEl)  subEl.textContent = `Bienvenue ! Crée ou rejoins une ligue pour commencer.`
       if (budgetDisplay) budgetDisplay.textContent = '350M€'
+      await loadMesLigues()
       return
     }
 
@@ -2120,8 +2135,12 @@ async function loadClassement(leagueId) {
 // ── MES LIGUES ────────────────────────────────────────
 async function loadMesLigues() {
   if (!CURRENT_USER || !sb) return
-  const el = document.getElementById('ligue-list')
-  if (!el) return
+  // On remplit les deux emplacements possibles : la page Ligue ET le bloc "MES LIGUES" du dashboard
+  const targets = ['ligue-list', 'dash-ligue-list']
+    .map(id => document.getElementById(id))
+    .filter(Boolean)
+  if (!targets.length) return
+
   try {
     const { data: teams } = await sb
       .from('teams')
@@ -2129,14 +2148,15 @@ async function loadMesLigues() {
       .eq('coach_id', CURRENT_USER.id)
 
     if (!teams?.length) {
-      el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:16px;text-align:center;">
+      const emptyHtml = `<div style="color:var(--muted);font-size:13px;padding:16px;text-align:center;">
         Aucune ligue active.<br>Crée ou rejoins une ligue !
       </div>`
+      targets.forEach(el => el.innerHTML = emptyHtml)
       return
     }
 
     // Compter les équipes par ligue
-    el.innerHTML = await Promise.all(teams.map(async t => {
+    const html = await Promise.all(teams.map(async t => {
       const { count } = await sb.from('teams').select('*', {count:'exact'}).eq('league_id', t.league.id)
       const isAdmin = t.league.admin_id === CURRENT_USER.id
       return `
@@ -2153,6 +2173,8 @@ async function loadMesLigues() {
         <span style="background:var(--gold-dim);border:1px solid var(--gold-b);color:var(--green);font-family:var(--f-disp);font-size:9px;letter-spacing:1px;padding:2px 8px;">${t.league.statut?.toUpperCase()||'ACTIF'}</span>
       </div>`
     })).then(items => items.join(''))
+
+    targets.forEach(el => el.innerHTML = html)
 
     // Afficher le code de la première ligue
     if (teams[0]) {
