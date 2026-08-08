@@ -2148,12 +2148,12 @@ async function loadMesLigues() {
       const isAdmin = t.league.admin_id === CURRENT_USER.id
       return `
       <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--ink-3);border:1.5px solid var(--gold-b);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,0 100%);">
-        <div style="width:40px;height:40px;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--f-disp);font-size:18px;color:var(--gold-hi);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);cursor:pointer;" onclick="selectLigue('${t.league.id}','${t.league.code}')">⚽</div>
-        <div style="flex:1;cursor:pointer;" onclick="selectLigue('${t.league.id}','${t.league.code}')">
+        <div style="width:40px;height:40px;background:var(--gold-dim);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:var(--f-disp);font-size:18px;color:var(--gold-hi);clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);cursor:pointer;" onclick="selectLigue('${t.id}','${t.league.id}','${t.league.code}','${t.league.statut}')">⚽</div>
+        <div style="flex:1;cursor:pointer;" onclick="selectLigue('${t.id}','${t.league.id}','${t.league.code}','${t.league.statut}')">
           <div style="font-family:var(--f-disp);font-size:16px;letter-spacing:2px;">${t.league.nom.toUpperCase()}</div>
           <div style="font-size:10px;color:var(--muted);">${count||0}/${t.league.nb_joueurs} équipes · ${isAdmin?'👑 Admin':'Membre'}</div>
         </div>
-        <div style="text-align:right;cursor:pointer;" onclick="selectLigue('${t.league.id}','${t.league.code}')">
+        <div style="text-align:right;cursor:pointer;" onclick="selectLigue('${t.id}','${t.league.id}','${t.league.code}','${t.league.statut}')">
           <div style="font-family:var(--f-disp);font-size:24px;color:var(--gold-hi);">${t.points||0}</div>
           <div style="font-size:9px;color:var(--muted);">pts</div>
         </div>
@@ -2187,11 +2187,26 @@ function updateInviteCodeDisplay(code) {
   if (copyBtn) copyBtn.onclick = () => copyCode(code)
 }
 
-function selectLigue(leagueId, code) {
-  // Sauvegarder la ligue sélectionnée
+// Contexte de la ligue/équipe actuellement sélectionnée depuis "MES LIGUES"
+let CURRENT_TEAM_ID   = null
+let CURRENT_LEAGUE_ID = null
+
+function selectLigue(teamId, leagueId, code, statut) {
+  CURRENT_TEAM_ID   = teamId
+  CURRENT_LEAGUE_ID = leagueId
+  localStorage.setItem('gtg-current-team', teamId)
   localStorage.setItem('gtg-current-league', leagueId)
-  loadClassement(leagueId)
-  toast('Ligue sélectionnée', 'info')
+
+  if (statut === 'mercato') {
+    // Mercato en cours → on emmène directement le coach enchérir
+    const navBid = document.querySelector('.nav-item[title=Mercato]')
+    goto('mercato', navBid)
+  } else {
+    // Recrutement pas encore ouvert, ou saison en cours/terminée → vue équipe
+    const navEffectif = document.querySelector('.nav-item[title=Effectif]')
+    goto('equipe', navEffectif)
+    loadMonEffectif(teamId)
+  }
 }
 
 // ── MON EFFECTIF ──────────────────────────────────────
@@ -2653,6 +2668,8 @@ function resetUserScopedCaches() {
   simIsDemo = true; simHomeName = 'LES INVINCIBLES'; simAwayName = 'DRAGON FC'; simJournee = null
 
   HAS_TEAM = false
+  CURRENT_TEAM_ID = null
+  CURRENT_LEAGUE_ID = null
   updateNavAccess()
 }
 
@@ -2919,6 +2936,8 @@ function goto(id, el) {
   if (id === 'joueurs') { dbPage = 1; renderDB(); }
   if (id === 'mercato') { loadEncherePlayers().then(() => renderEnchere()); }
   if (id === 'match') { if (!simLoaded && !simLoading) { loadSimMatch(); } else { renderSimHeader(); } }
+  if (id === 'equipe' && CURRENT_TEAM_ID) { loadMonEffectif(CURRENT_TEAM_ID); }
+  if (id === 'classement' && CURRENT_LEAGUE_ID) { loadClassement(CURRENT_LEAGUE_ID); }
   if (id === 'ai') initAIChat();
 }
 
@@ -3129,10 +3148,15 @@ async function loadEncherePlayers() {
     if (!sb) { encErrorMsg = 'Connexion à la base indisponible.'; return }
     if (!CURRENT_USER) { encErrorMsg = 'Connecte-toi pour accéder au mercato.'; return }
 
-    // Récupérer l'équipe active
-    const { data: teams, error: teamErr } = await sb.from('teams')
+    // Récupérer l'équipe active — priorité à celle sélectionnée depuis "MES LIGUES"
+    let teamQuery = sb.from('teams')
       .select('id, budget, league_id, league:leagues(statut, nb_tours)')
-      .eq('coach_id', CURRENT_USER.id).limit(1)
+
+    teamQuery = CURRENT_TEAM_ID
+      ? teamQuery.eq('id', CURRENT_TEAM_ID)
+      : teamQuery.eq('coach_id', CURRENT_USER.id).limit(1)
+
+    const { data: teams, error: teamErr } = await teamQuery
 
     if (teamErr) { encErrorMsg = 'Erreur chargement équipe : ' + teamErr.message; return }
 
